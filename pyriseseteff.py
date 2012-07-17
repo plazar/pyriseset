@@ -595,7 +595,7 @@ class ObsSite(object):
             horaz, horalt = np.loadtxt(f, unpack=True)
         finally:
             f.close()
-        horizon = scipy.interpolate.interp1d(horaz, horalt, 3)
+        horizon = scipy.interpolate.interp1d(horaz, horalt, 'linear')
         return ObsSite(name, lon, lat, horizon)
 
     def lstnow(self):
@@ -629,7 +629,8 @@ class ObsSite(object):
             lst = self.lstnow()
         if date is None:
             date = datetime.date.today()
-        gst = lst + self.lon/15
+        # Calculate sidereal time at Greenwich
+        gst = lst - self.lon/15.0
         return gst_to_utc(gst, date)
 
 
