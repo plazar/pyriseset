@@ -898,7 +898,6 @@ def gst_to_utc(gst, date):
     T0 = T0 % 24
 
     utc = 0.9972695663*((gst - T0)%24)
-    warnings.warn("gst_to_utc seems to give incorrect results!")
     return utc
 
 
@@ -917,6 +916,26 @@ def gst_to_mjd(gst, date):
     warnings.warn("gst_to_mjd is untested.")
     return date_to_mjd(date.year, date.month, date.day+utc/24.0)
 
+
+def ut_to_gst(ut, date):
+    """Given the date and Universal Time in hours compute the 
+        corresponding mean sidereal time, also in hours.
+
+        Inputs:
+            ut: Universal Time, in decimal hours.
+            date: The date, a datetime.date object.
+
+        Output:
+            gst: The GST, in decimal hours.
+    """
+    mjd = date_to_mjd(date.year, date.month, int(date.day))
+    jd = mjd + 2400000.5
+    S = jd - 2451545.0
+    T = S/36525.0
+    T0 = 6.697374558 + (2400.051336 + (0.000025862*T))*T
+    T0 = T0 % 24
+    gst = (ut*1.002737909 + T0) % 24
+    return gst
 
 def mjd_to_gst(mjd):
     """Given Modified Julian Day (mjd) return Greenwich mean sidereal time
