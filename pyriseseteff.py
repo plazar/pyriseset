@@ -630,8 +630,50 @@ class ObsSite(object):
         if date is None:
             date = datetime.date.today()
         # Calculate sidereal time at Greenwich
-        gst = lst - self.lon/15.0
+        gst = self.lst_to_gst(lst)
         return gst_to_utc(gst, date)
+
+    def utc_to_lst(self, utc=None, date=None):
+        """Return the LST at this observing site corresponding
+            to the UT provided.
+
+            Inputs:
+                ut: Universal time, in hours.
+                date: A datetime.date object.
+
+            Output:
+                lst: The local sidereal time, in hours.
+        """
+        if utc is None:
+            utcstr = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")
+            utc = hmsstr_to_deg(utcstr)/15.0
+        if date is None:
+            date = datetime.date.today()
+        # Calculate gst
+        gst = ut_to_gst(utc, date)
+        return self.gst_to_lst(gst)
+
+    def gst_to_lst(self, gst):
+        """Given GST in hours, compute LST in hours.
+
+            Input:
+                GST: Sidereal time in Greenwich, in hours.
+
+            Output:
+                LST: Local sidereal time, in hours.
+        """
+        return gst + self.lon/15.0
+
+    def lst_to_gst(self, lst):
+        """Given LST in hours, compute GST in hours.
+
+            Input:
+                LST: Local sidereal time, in hours.
+
+            Output:
+                GST: Sidereal time in Greenwich, in hours.
+        """
+        return lst - self.lon/15.0
 
 
 class SourceList(list):
