@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 OBLIQUITY = 23.441884 # degrees
 OBLIQRAD = np.deg2rad(OBLIQUITY) # radians
 
-hms_re = re.compile(r'^(?P<sign>[-+])?(?P<hour>\d{2}):(?P<min>\d{2})' \
+hms_re = re.compile(r'^(?P<sign>[-+])?(?P<hour>\d{1,2}):(?P<min>\d{2})' \
                      r'(?::(?P<sec>\d{2}(?:.\d+)?))?$')
 dms_re = re.compile(r'^(?P<sign>[-+])?(?P<deg>\d{2}):(?P<min>\d{2})' \
                      r'(?::(?P<sec>\d{2}(?:.\d+)?))?$')
@@ -1359,14 +1359,14 @@ class ExtendSourceCoords(argparse.Action):
         srclist.extend_from_file(values)
 
 
-class ParseLST(argparse.Action):
+class ParseTime(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
-        lststr = values
-        if hms_re.match(lststr):
-            setattr(namespace, self.dest, hmsstr_to_deg(lststr)/15.0)
+        timestr = values
+        if hms_re.match(timestr):
+            setattr(namespace, self.dest, hmsstr_to_deg(timestr)/15.0)
         else:
-            # Assume lst is in decimal hours
-            setattr(namespace, self.dest, float(lststr))
+            # Assume time is in decimal hours
+            setattr(namespace, self.dest, float(timestr))
 
 
 class ParseDate(argparse.Action):
@@ -1422,7 +1422,7 @@ if __name__=='__main__':
                         action=ExtendSourceCoords, dest='calibrators', \
                         help="Read calibrators from files.")
     parser.add_argument('--lst', dest='lst', default=None, \
-                        action=ParseLST, \
+                        action=ParseTime, \
                         help="Local Sidereal Time to use. Can be given " \
                             "as a string (in HH:MM:SS.SS format). Or as " \
                             "a floating point number (in hours). " \
