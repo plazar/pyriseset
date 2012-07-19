@@ -1392,6 +1392,9 @@ class SkyViewFigure(matplotlib.figure.Figure):
 def main():
     site = ObsSite.from_file(args.site_file)
     
+    if (args.utc is not None):
+        args.lst = site.utc_to_lst(args.utc)
+
     if (args.lst is not None) and (args.date is None):
         # A fixed LST is used, but no date is provided.
         # Fix date to today's date.
@@ -1482,9 +1485,16 @@ if __name__=='__main__':
     parser.add_argument('--calibrator-file', type=str, \
                         action=ExtendSourceCoords, dest='calibrators', \
                         help="Read calibrators from files.")
-    parser.add_argument('--lst', dest='lst', default=None, \
+    timegrp = parser.add_mutually_exclusive_group()
+    timegrp.add_argument('--lst', dest='lst', default=None, \
                         action=ParseTime, \
                         help="Local Sidereal Time to use. Can be given " \
+                            "as a string (in HH:MM:SS.SS format). Or as " \
+                            "a floating point number (in hours). " \
+                            "(Default: now!)")
+    timegrp.add_argument('--utc', dest='utc', default=None, \
+                        action=ParseTime, \
+                        help="Universal Time to use. Can be given " \
                             "as a string (in HH:MM:SS.SS format). Or as " \
                             "a floating point number (in hours). " \
                             "(Default: now!)")
