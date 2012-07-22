@@ -217,6 +217,8 @@ class BaseSource(object):
         if alt > site.horizon(az):
             posninfo.append(u"Alt.: %.2f\u00b0" % alt)
             posninfo.append(u"Az.: %.2f\u00b0" % az)
+            posninfo.append(u"Alt. above horizon: %.2f\u00b0" % \
+                                (alt - site.horizon(az)))
         return posninfo
     
     def get_rise_set_text(self, site, lst=None, date=None):
@@ -308,9 +310,14 @@ class Source(BaseSource):
             # Get position from 'psrcat'
             posn = subprocess.check_output(['psrcat', '-c', 'rajd decjd', \
                         '-nohead', '-nonumber', '-o', 'short', grps['name']])
-            ra_deg_str, decl_deg_str = posn.split()
-            ra_deg = float(ra_deg_str)
-            decl_deg = float(decl_deg_str)
+            try:
+                ra_deg_str, decl_deg_str = posn.split()
+            except:
+                raise BadSourceStringFormat("%s is not recognized by psrcat." \
+                                                % grps['name'])
+            else:
+                ra_deg = float(ra_deg_str)
+                decl_deg = float(decl_deg_str)
         else:
             if hms_re.match(grps['ra']):
                 ra_deg = hmsstr_to_deg(grps['ra'])
@@ -690,7 +697,12 @@ class SourceList(list):
             if not len(line):
                 continue
             else:
-                self.append(self.src_cls.from_string(line))
+                try:
+                    src = self.src_cls.from_string(line)
+                except BadSourceStringFormat, e:
+                    warnings.warn("%s\n(%s)" % (e, line))
+                else:
+                    self.append(src)
 
     def get_altaz(self, site, lst=None, date=None):
         """Return altitudes and azimuths of sources.
@@ -1327,17 +1339,23 @@ class SkyViewFigure(matplotlib.figure.Figure):
                 self.select_type_text = self.text(0.8, 0.37, \
                         self.selected_list.name, size='x-small', \
                         ha='left', va='center')
+                notes = self.selected.notes or ""
+                self.select_notes_text = self.text(0.8, 0.34, \
+                        notes, size='x-small', \
+                        ha='left', va='center')
                 posntext = "\n".join(self.selected.get_posn_text(self.site, \
                                                             self.lst, self.date))
-                self.select_posn_text = self.text(0.8, 0.33, posntext, \
+                self.select_posn_text = self.text(0.8, 0.31, posntext, \
                         size='small', ha='left', va='top')
                 rstext = "\n".join(self.selected.get_rise_set_text(self.site, \
                                                             self.lst, self.date))
-                self.select_up_text = self.text(0.8, 0.23, rstext,
+                self.select_up_text = self.text(0.8, 0.19, rstext,
                         size='small', ha='left', va='top')
             else:
                 self.select_name_text.set_text(self.selected.name)
                 self.select_type_text.set_text(self.selected_list.name)
+                notes = self.selected.notes or ""
+                self.select_notes_text.set_text(notes)
                 posntext = "\n".join(self.selected.get_posn_text(self.site, \
                                                             self.lst, self.date))
                 self.select_posn_text.set_text(posntext)
@@ -1354,19 +1372,19 @@ class SkyViewFigure(matplotlib.figure.Figure):
     def on_pick(self, event):
         ind = event.ind[0]
         if event.artist == self.sun_scatt:
-            print "Picked target: ", self.sun
+            # print "Picked target: ", self.sun
             self.selected = self.sun
             self.selected_list = self.sun_list
         if event.artist == self.target_scatt:
-            print "Picked target: ", self.targets[ind]
+            # print "Picked target: ", self.targets[ind]
             self.selected = self.targets[ind]
             self.selected_list = self.targets
         elif event.artist == self.test_scatt:
-            print "Picked test source: ", self.testsources[ind]
+            # print "Picked test source: ", self.testsources[ind]
             self.selected = self.testsources[ind]
             self.selected_list = self.testsources
         elif event.artist == self.cal_scatt:
-            print "Picked calibrator source:", self.calibrators[ind]
+            # print "Picked calibrator source:", self.calibrators[ind]
             self.selected = self.calibrators[ind]
             self.selected_list = self.calibrators
         self.update()
