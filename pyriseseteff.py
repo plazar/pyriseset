@@ -85,6 +85,9 @@ class BaseSource(object):
     def get_size(self):
         return self.size
 
+    def get_highlight_size(self):
+        return self.highlight_size
+
     def get_colour(self):
         return self.colour
 
@@ -276,6 +279,7 @@ class Source(BaseSource):
                 "(?P<decl>[^ ]+))??( +-- *(?P<notes>.*))?$")
     
     zorder = 2
+    highlight_size = 400
 
     def __init__(self, name, ra_deg, decl_deg, notes=None):
         """Constructor for Pulsar class.
@@ -360,6 +364,7 @@ class Sun(BaseSource):
     """An object to represent the Sun.
     """
     size = 400
+    highlight_size = 1000
     colour = '#FFD700'
     marker = 'o'
     zorder = -1
@@ -916,6 +921,7 @@ class SkyViewFigure(matplotlib.figure.Figure):
 
         self.path = None
         self.selected = None
+        self.selected_scatt = None
         self.selected_list = None
         self.select_name_text = None
 
@@ -1163,10 +1169,32 @@ class SkyViewFigure(matplotlib.figure.Figure):
                                 'k--', lw=1, zorder=1)[0]
             else:
                 self.path.set_data(path_azs_rad, path_zas)
+            
+            # Put a circle around the selected source
+            alt, az = self.selected.get_altaz(self.site, \
+                                        lst=self.lst, date=self.date)
+            az_rad = np.deg2rad(az)
+            za = 90 - alt
+            if self.selected_scatt is None:
+                self.selected_scatt = self.horizon_polarax.scatter(az_rad, za, \
+                                        marker='o', facecolors='none', \
+                                        s=self.selected.get_highlight_size(), \
+                                        edgecolors='k', linestyles='-.', \
+                                        linewidths='1', \
+                                        zorder=self.selected.get_zorder())
+            else:
+                self.selected_scatt._sizes = [self.selected.get_highlight_size()]
+                self.selected_scatt.set_zorder(self.selected.get_zorder())
+                self.selected_scatt.set_offsets(zip(az_rad, za))
+
+            # Set lines to day-time/night-time mode
             if self.sun.is_night(self.site, lst=self.lst, date=self.date):
                 self.path.set_color('w')
+                self.selected_scatt.set_edgecolors('w')
             else:
                 self.path.set_color('k')
+                self.selected_scatt.set_edgecolors('k')
+
             if self.select_name_text is None:
                 self.select_name_text = self.text(0.8, 0.4, \
                         self.selected.name, size='x-large', \
