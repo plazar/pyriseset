@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 import argparse
 import datetime
 import re
@@ -9,6 +10,8 @@ import numpy as np
 import scipy.interpolate
 import matplotlib
 import matplotlib.pyplot as plt
+
+import sites
 
 OBLIQUITY = 23.441884 # degrees
 OBLIQRAD = np.deg2rad(OBLIQUITY) # radians
@@ -514,174 +517,6 @@ class BackgroundStar(BaseSource):
         return BackgroundStar(grps['name'], ra_deg, decl_deg, \
                                 float(grps['mag']), grps['notes'])
     
-
-class ObsSite(object):
-    """An object to store observing site information.
-    """
-    def __init__(self, name, lon, lat, horizon=(lambda az: np.zeros_like(az))):
-        """Constructor for ObsSite objects.
-
-            Inputs:
-                name: The name of the observing site.
-                lon: The site's longitude (in degrees).
-                    Note: Longitudes East should be positive, and
-                        longitudes West should be negative.
-                lat: The site's latitude (in degrees).
-                    Note: Latitudes North should be positive, and
-                        latitudes South should be negative.
-                horizon: A function that accepts an azimuth value 
-                    (in degrees - ie a value between 0.0 and 360.0, 
-                    inclusive) and returns the elevation of the horizon 
-                    (also in degrees - a value between 0.0 and 90.0).
-                    (Default: lambda az: 0.0)
-
-            Output:
-                site: The ObsSite object.
-        """
-        self.name = name
-        self.lon = lon
-        self.lat = lat
-        self.horizon = horizon
-
-    @classmethod
-    def from_file(cls, fn):
-        """Read site information from a file and return a ObsSite object.
-
-            ObsSite file format:
-                1st line - "# Name: <site name>"
-                2nd line - "# Longitude: <site longitude (degrees)>"
-                3rd line - "# Latitude: <site latitude (degrees)>"
-                4th line - "# Horizon:"
-                subsequent lines - "<azimuth (degrees)> <horizon elevation (degrees)>"
-
-            NOTES: 
-                * Longitudes West should be negative.
-                * Longitudes East should be positive.
-                * Latitudes South should be negative. 
-                * Latitudes North should be positive.
-            
-            Input:
-                fn: The site file's name.
-
-            Output:
-                site: The site object.
-        """
-        f = open(fn, 'r')
-        try:   
-            # Get site name
-            line = f.readline()
-            if not line.lower().startswith("# name:"):
-                raise BadSiteFileFormat("The first line of site file should " \
-                                        "start with '# Name:', and be followed " \
-                                        "by the site's name")
-            name = line[7:].strip()
-         
-            # Get site longitude
-            line = f.readline()
-            if not line.lower().startswith("# longitude:"):
-                raise BadSiteFileFormat("The second line of site file should " \
-                                    "start with '# Longitude:', and be followed " \
-                                    "by the site's longitude in degrees.")
-            lon = float(line[12:].strip())
-         
-            # Get site latitude
-            line = f.readline()
-            if not line.lower().startswith("# latitude:"):
-                raise BadSiteFileFormat("The third line of site file should " \
-                                    "start with '# Latitude:', and be followed " \
-                                    "by the site's latitude in degrees.")
-            lat = float(line[11:].strip())
-         
-            # Get horizon
-            line = f.readline()
-            if not line.lower().startswith("# horizon:"):
-                raise BadSiteFileFormat("The fourth line of the site file should " \
-                                        "start with '# Horizon:', and be followed " \
-                                        "by multiple lines with azimuth and " \
-                                        "horizon elevation in degrees.")
-            horaz, horalt = np.loadtxt(f, unpack=True)
-        finally:
-            f.close()
-        horizon = scipy.interpolate.interp1d(horaz, horalt, 'linear')
-        return ObsSite(name, lon, lat, horizon)
-
-    def lstnow(self):
-        """Return the site's current LST.
-
-            Inputs:
-                None
-    
-            Output:
-                LST: The local sidereal time for the observer (in hours).
-        """
-        mjd = mjdnow()
-        gst = mjd_to_gst(mjd)
-        lon_hours = self.lon/15.0
-        lst = gst + lon_hours
-        lst = lst % 24
-        return lst# * 900 % 24
-
-    def lst_to_utc(self, lst=None, date=None):
-        """Return the UTC corresponding to the given LST at 
-            the provided observing site.
-
-            Inputs:
-                lst: The local sidereal time for the observer, in hours.
-                date: A datetime.date object.
-
-            Output:
-                utc: The UTC, in hours.
-        """
-        if lst is None:
-            lst = self.lstnow()
-        if date is None:
-            date = datetime.date.today()
-        # Calculate sidereal time at Greenwich
-        gst = self.lst_to_gst(lst)
-        return gst_to_utc(gst, date)
-
-    def utc_to_lst(self, utc=None, date=None):
-        """Return the LST at this observing site corresponding
-            to the UT provided.
-
-            Inputs:
-                ut: Universal time, in hours.
-                date: A datetime.date object.
-
-            Output:
-                lst: The local sidereal time, in hours.
-        """
-        if utc is None:
-            utcstr = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")
-            utc = hmsstr_to_deg(utcstr)/15.0
-        if date is None:
-            date = datetime.date.today()
-        # Calculate gst
-        gst = ut_to_gst(utc, date)
-        return self.gst_to_lst(gst)
-
-    def gst_to_lst(self, gst):
-        """Given GST in hours, compute LST in hours.
-
-            Input:
-                GST: Sidereal time in Greenwich, in hours.
-
-            Output:
-                LST: Local sidereal time, in hours.
-        """
-        return gst + self.lon/15.0
-
-    def lst_to_gst(self, lst):
-        """Given LST in hours, compute GST in hours.
-
-            Input:
-                LST: Local sidereal time, in hours.
-
-            Output:
-                GST: Sidereal time in Greenwich, in hours.
-        """
-        return lst - self.lon/15.0
-
 
 class SourceList(list):
     def __init__(self, *args, **kwargs):
@@ -1408,7 +1243,7 @@ class SkyViewFigure(matplotlib.figure.Figure):
             
 
 def main():
-    site = ObsSite.from_file(args.site_file)
+    site = sites.load(args.site)
     
     if (args.utc is not None):
         args.lst = site.utc_to_lst(args.utc)
@@ -1465,6 +1300,14 @@ class ParseDate(argparse.Action):
             setattr(namespace, self.dest, date)
 
 
+class ListSitesAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string):
+        print "Available observing sites:"
+        for sitename in sites.registered_sites:
+            print "    %s" % sitename
+        sys.exit()
+
+
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description="Plot sources in Alt-Az " \
                         "for a given telescope.")
@@ -1475,10 +1318,6 @@ if __name__=='__main__':
                         default=5, \
                         help="Number of minutes between updates of the " \
                             "figure, if running interactively. (Default: 5)")
-    parser.add_argument('--site-file', type=str, required=True, \
-                        dest='site_file', \
-                        help="A file containing observing site information. " \
-                            "This argument is required.")
     parser.add_argument('--target', type=str, \
                         action=AppendSourceCoords, dest='targets', \
                         help="A string describing a target. Format should " \
@@ -1519,5 +1358,13 @@ if __name__=='__main__':
     parser.add_argument('--date', type=str, default=None, \
                         action=ParseDate, \
                         help="Date to use. (Default: today)")
+    parser.add_argument('--list-sites', action=ListSitesAction, nargs=0, \
+                        help="List registered observing sites, and exit.")
+    parser.add_argument('--site', dest='site', type=str, \
+                        default=sites.registered_sites[0], \
+                        help="Name of observing site to load. Use " \
+                            "'--list-sites' to get a list of accepted " \
+                            "sites. (Default: '%s')" % \
+                            sites.registered_sites[0])
     args = parser.parse_args()
     main()
