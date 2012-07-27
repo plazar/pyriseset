@@ -9,7 +9,7 @@ class Effelsberg(base.BaseSite):
     lat = 50.524722
 
     def tracking(self, alt, az):
-        return alt > 8.1
+        return (90-alt) > 8.1
 
     horaz = np.array([   0.,    5.,   10.,   15.,   20.,   25.,   30.,   
          35.,   40.,
