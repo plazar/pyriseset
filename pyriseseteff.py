@@ -1332,21 +1332,21 @@ def main():
                                     deg_to_hmsstr(((risetime-args.lst)%24)*15)[0]
                     risetosetstr = "Rise to set time: %s" % \
                                 deg_to_hmsstr(((settime-risetime)%24)*15)[0]
-                    riselststr = "Rise time (LST): %s" % \
+                    riselststr = "Rise (LST): %s" % \
                                 deg_to_hmsstr((risetime%24)*15)[0]
-                    riseutcstr = "Rise time (UTC): %s" % \
+                    riseutcstr = "Rise (UTC): %s" % \
                                 deg_to_hmsstr((site.lst_to_utc(risetime, \
                                             args.date)%24)*15)[0]
-                    setlststr = "Set time (LST): %s" % \
+                    setlststr = "Set (LST): %s" % \
                                 deg_to_hmsstr((settime%24)*15)[0]
-                    setutcstr = "Set time (UTC): %s" % \
+                    setutcstr = "Set (UTC): %s" % \
                                 deg_to_hmsstr((site.lst_to_utc(settime, \
                                             args.date)%24)*15)[0]
                  
                     srctypestr = "(%s)" % srclist.name
                     print "%-20s%-27s%27s" % (srctypestr, risetosetstr, eventstr)
-                    print " "*20 + "%-27s%27s" % (riselststr, setlststr)
-                    print " "*20 + "%-27s%27s" % (riseutcstr, setutcstr)
+                    print " "*20 + "%-22s%22s" % (riselststr, setlststr)
+                    print " "*20 + "%-22s%22s" % (riseutcstr, setutcstr)
                 if src.notes:
                     print ""
                     print " "*20 + "NOTES: %s" % src.notes
