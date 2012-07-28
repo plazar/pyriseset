@@ -1280,16 +1280,85 @@ def main():
         # A fixed LST is used, but no date is provided.
         # Fix date to today's date.
         args.date = datetime.date.today()
-    fig = plt.figure(figsize=(10,8), FigureClass=SkyViewFigure, site=site, \
-                    targets=args.targets, testsources=args.testsources, \
-                    calibrators=args.calibrators, lst=args.lst, date=args.date)
-    fig.plot()
-    timer = fig.canvas.new_timer(args.update_time*60*1000) # Time interval in ms
-    timer.add_callback(fig.update)
-    timer.start()
+    if args.interactive:
+        fig = plt.figure(figsize=(10,8), FigureClass=SkyViewFigure, site=site, \
+                        targets=args.targets, testsources=args.testsources, \
+                        calibrators=args.calibrators, lst=args.lst, date=args.date)
+        fig.plot()
+        timer = fig.canvas.new_timer(args.update_time*60*1000) # Time interval in ms
+        timer.add_callback(fig.update)
+        timer.start()
+ 
+        # Show the plot
+        plt.show()
+    else:
+        if args.lst is None:
+            args.lst = site.lstnow()
+        if args.date is None:
+            args.date = datetime.date.today()
+        
+        datestr = args.date.strftime("%b %d, %Y")
+        lststr = deg_to_hmsstr(args.lst*15)[0]
+        utc = site.lst_to_utc(lst=args.lst, date=args.date)
+        utcstr = deg_to_hmsstr(utc*15)[0]
+        print "%s\tLST: %s\tUTC: %s\n" % (datestr, lststr, utcstr)
+        for srclist in [args.calibrators, args.targets, args.testsources]:
+            for src in srclist:
+                ra_deg, dec_deg = src.get_posn(args.lst, args.date)
+                rastr = "R.A. (J2000): %s" % deg_to_hmsstr(ra_deg, 2)[0]
+                decstr = "Dec. (J2000): %s" % deg_to_dmsstr(dec_deg, 2)[0]
+                print "%-20s%-27s%27s" % (src.name, rastr, decstr)
+                try:
+                    risetime, settime = src.get_rise_set_times(site, args.date)
+                except SourceIsCircumpolar:
+                    srctypestr = "(%s)" % srclist.name
+                    print "%-20sSource is circumpolar." % srctypestr
+                except SourceNeverRises:
+                    srctypestr = "(%s)" % srclist.name
+                    print "%-20sSource never rises." % srctypestr
+                except MultipleRiseSets:
+                    srctypestr = "(%s)" % srclist.name
+                    print "%-20sMultiple rise/set times?!" % srctypestr
+                except:
+                    srctypestr = "(%s)" % srclist.name
+                    print "%-20sError! Oops..." % srctypestr
+                    raise
+                else:
+                    if src.is_visible(site, args.lst, args.date):
+                        eventstr = "Source sets in %s" % \
+                                    deg_to_hmsstr(((settime-args.lst)%24)*15)[0]
+                    else:
+                        eventstr = "Source rises in %s" % \
+                                    deg_to_hmsstr(((risetime-args.lst)%24)*15)[0]
+                    risetosetstr = "Rise to set time: %s" % \
+                                deg_to_hmsstr(((settime-risetime)%24)*15)[0]
+                    riselststr = "Rise time (LST): %s" % \
+                                deg_to_hmsstr((risetime%24)*15)[0]
+                    riseutcstr = "Rise time (UTC): %s" % \
+                                deg_to_hmsstr((site.lst_to_utc(risetime, \
+                                            args.date)%24)*15)[0]
+                    setlststr = "Set time (LST): %s" % \
+                                deg_to_hmsstr((settime%24)*15)[0]
+                    setutcstr = "Set time (UTC): %s" % \
+                                deg_to_hmsstr((site.lst_to_utc(settime, \
+                                            args.date)%24)*15)[0]
+                 
+                    srctypestr = "(%s)" % srclist.name
+                    print "%-20s%-27s%27s" % (srctypestr, risetosetstr, eventstr)
+                    print " "*20 + "%-27s%27s" % (riselststr, setlststr)
+                    print " "*20 + "%-27s%27s" % (riseutcstr, setutcstr)
+                if src.notes:
+                    print ""
+                    print " "*20 + "NOTES: %s" % src.notes
+                    print ""
+                print ""
 
-    # Show the plot
-    plt.show()
+                #alt, az = src.get_altaz(site, args.lst, args.date)
+                #if alt > site.horizon(az):
+                #    altstr = u"Alt.: %.2f\u00b0" % alt)
+                #    azstr = u"Az.: %.2f\u00b0" % az)
+                #    altabove = u"Alt. above horizon: %.2f\u00b0" % \
+                #                    (alt - site.horizon(az)))
 
 
 class AppendSourceCoords(argparse.Action):
@@ -1394,5 +1463,9 @@ if __name__=='__main__':
                             "'--list-sites' to get a list of accepted " \
                             "sites. (Default: '%s')" % \
                             sites.registered_sites[0])
+    parser.add_argument('-n', '--non-interactive', dest='interactive', \
+                        action='store_false', \
+                        help="Print rise/set times to stdout and exit. " \
+                            "(Default: show sky view interactively.)")
     args = parser.parse_args()
     main()
