@@ -1415,7 +1415,7 @@ if __name__=='__main__':
                         default=5, \
                         help="Number of minutes between updates of the " \
                             "figure, if running interactively. (Default: 5)")
-    parser.add_argument('--target', type=str, \
+    parser.add_argument('-p', '--target', type=str, \
                         action=AppendSourceCoords, dest='targets', \
                         help="A string describing a target. Format should " \
                             "be '<name> <ra> <decl> [<notes>]'. " \
@@ -1423,7 +1423,7 @@ if __name__=='__main__':
     parser.add_argument('--target-file', type=str, \
                         action=ExtendSourceCoords, dest='targets', \
                         help="Read targets from files.")
-    parser.add_argument('--testsource', type=str, \
+    parser.add_argument('-t', '--testsource', type=str, \
                         action=AppendSourceCoords, dest='testsources', \
                         help="A string describing a testsource. Format should " \
                             "be '<name> <ra> <decl> [<notes>]'. " \
@@ -1431,7 +1431,7 @@ if __name__=='__main__':
     parser.add_argument('--testsource-file', type=str, \
                         action=ExtendSourceCoords, dest='testsources', \
                         help="Read testsources from files.")
-    parser.add_argument('--calibrator', type=str, \
+    parser.add_argument('-c', '--calibrator', type=str, \
                         action=AppendSourceCoords, dest='calibrators', \
                         help="A string describing a calibrator. Format should " \
                             "be '<name> <ra> <decl> [<notes>]'. " \
