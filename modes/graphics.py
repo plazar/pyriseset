@@ -1,9 +1,13 @@
+import datetime
+
+import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
 import utils
 
-from pyriseseteff import *
+import sources
+import sourcelist
 
 class SkyViewFigure(matplotlib.figure.Figure):
     def __init__(self, site, targets, testsources, calibrators, 
@@ -28,8 +32,8 @@ class SkyViewFigure(matplotlib.figure.Figure):
         self.targets = targets
         self.testsources = testsources
         self.calibrators = calibrators
-        self.bgstars = SourceList(name='Background Stars', \
-                                  src_cls=BackgroundStar, \
+        self.bgstars = sourcelist.SourceList(name='Background Stars', \
+                                  src_cls=sources.BackgroundStar, \
                                   pickable=False)
         self.bgstars.extend_from_file('bsc.txt')
 
@@ -46,8 +50,9 @@ class SkyViewFigure(matplotlib.figure.Figure):
         self.selected_list = None
         self.select_name_text = None
 
-        self.sun = Sun()
-        self.sun_list = SourceList(name="The Sun", src_cls=Sun)
+        self.sun = sources.Sun()
+        self.sun_list = sourcelist.SourceList(name="The Sun", \
+                                                src_cls=sources.Sun)
         self.sun_list.append(self.sun)
 
     def plot(self):
