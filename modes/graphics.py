@@ -1,6 +1,8 @@
 import matplotlib
 import matplotlib.pyplot as plt
 
+import utils
+
 from pyriseseteff import *
 
 class SkyViewFigure(matplotlib.figure.Figure):
@@ -66,12 +68,12 @@ class SkyViewFigure(matplotlib.figure.Figure):
             londir = "W"
         else:
             londir = "E"
-        lonstr = "%s %s" % (deg_to_dmsstr(abs(self.site.lon))[0], londir)
+        lonstr = "%s %s" % (utils.deg_to_dmsstr(abs(self.site.lon))[0], londir)
         if self.site.lat < 0:
             latdir = "S"
         else:
             latdir = "N"
-        latstr = "%s %s" % (deg_to_dmsstr(abs(self.site.lat))[0], latdir)
+        latstr = "%s %s" % (utils.deg_to_dmsstr(abs(self.site.lat))[0], latdir)
         self.text(0.02, 0.91, "%s, %s" % (lonstr, latstr), size='x-small', \
                     ha='left', va='center')
         
@@ -216,15 +218,15 @@ class SkyViewFigure(matplotlib.figure.Figure):
             datetimestrs.append("Current date: %s" % \
                     str(datetime.date.today()))
             datetimestrs.append("Current LST: %s" % \
-                    deg_to_hmsstr(self.site.lstnow()*15)[0].split('.')[0])
+                    utils.deg_to_hmsstr(self.site.lstnow()*15)[0].split('.')[0])
             datetimestrs.append("Current UTC: %s" % \
                     datetime.datetime.utcnow().strftime('%H:%M:%S'))
         else:
             datetimestrs.append("Date selected: %s" % str(self.date))
             datetimestrs.append("LST selected: %s" % \
-                    deg_to_hmsstr(self.lst*15)[0])
+                    utils.deg_to_hmsstr(self.lst*15)[0])
             datetimestrs.append("UTC selected: %s" % \
-                    deg_to_hmsstr(self.site.lst_to_utc(self.lst, self.date)*15)[0])
+                    utils.deg_to_hmsstr(self.site.lst_to_utc(self.lst, self.date)*15)[0])
         return datetimestrs
 
     def update(self):

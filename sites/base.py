@@ -1,5 +1,5 @@
 import datetime
-import pyriseseteff
+import utils
 
 class BaseSite(object):
     """An object to store observing site information.
@@ -50,8 +50,8 @@ class BaseSite(object):
             Output:
                 LST: The local sidereal time for the observer (in hours).
         """
-        mjd = pyriseseteff.mjdnow()
-        gst = pyriseseteff.mjd_to_gst(mjd)
+        mjd = utils.mjdnow()
+        gst = utils.mjd_to_gst(mjd)
         lon_hours = self.lon/15.0
         lst = gst + lon_hours
         lst = lst % 24
@@ -74,7 +74,7 @@ class BaseSite(object):
             date = datetime.date.today()
         # Calculate sidereal time at Greenwich
         gst = self.lst_to_gst(lst)
-        return pyriseseteff.gst_to_utc(gst, date)
+        return utils.gst_to_utc(gst, date)
 
     def utc_to_lst(self, utc=None, date=None):
         """Return the LST at this observing site corresponding
@@ -89,11 +89,11 @@ class BaseSite(object):
         """
         if utc is None:
             utcstr = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")
-            utc = pyriseseteff.hmsstr_to_deg(utcstr)/15.0
+            utc = utils.hmsstr_to_deg(utcstr)/15.0
         if date is None:
             date = datetime.date.today()
         # Calculate gst
-        gst = pyriseseteff.ut_to_gst(utc, date)
+        gst = utils.ut_to_gst(utc, date)
         return self.gst_to_lst(gst)
 
     def gst_to_lst(self, gst):

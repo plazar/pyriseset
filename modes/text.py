@@ -1,8 +1,7 @@
 import datetime
 
 import errors
-
-from pyriseseteff import *
+import utils
 
 def run(site, lst, date, targets, testsources, calibrators, args):
     if lst is None:
@@ -11,15 +10,15 @@ def run(site, lst, date, targets, testsources, calibrators, args):
         date = datetime.date.today()
     
     datestr = date.strftime("%b %d, %Y")
-    lststr = deg_to_hmsstr(lst*15)[0]
+    lststr = utils.deg_to_hmsstr(lst*15)[0]
     utc = site.lst_to_utc(lst=lst, date=date)
-    utcstr = deg_to_hmsstr(utc*15)[0]
+    utcstr = utils.deg_to_hmsstr(utc*15)[0]
     print "%s\tLST: %s\tUTC: %s\n" % (datestr, lststr, utcstr)
     for srclist in [calibrators, targets, testsources]:
         for src in srclist:
             ra_deg, dec_deg = src.get_posn(lst, date)
-            rastr = "R.A. (J2000): %s" % deg_to_hmsstr(ra_deg, 2)[0]
-            decstr = "Dec. (J2000): %s" % deg_to_dmsstr(dec_deg, 2)[0]
+            rastr = "R.A. (J2000): %s" % utils.deg_to_hmsstr(ra_deg, 2)[0]
+            decstr = "Dec. (J2000): %s" % utils.deg_to_dmsstr(dec_deg, 2)[0]
             print "%-20s%-27s%27s" % (src.name, rastr, decstr)
             try:
                 risetime, settime = src.get_rise_set_times(site, date)
@@ -39,21 +38,21 @@ def run(site, lst, date, targets, testsources, calibrators, args):
             else:
                 if src.is_visible(site, lst, date):
                     eventstr = "Source sets in %s" % \
-                                deg_to_hmsstr(((settime-lst)%24)*15)[0]
+                                utils.deg_to_hmsstr(((settime-lst)%24)*15)[0]
                 else:
                     eventstr = "Source rises in %s" % \
-                                deg_to_hmsstr(((risetime-lst)%24)*15)[0]
+                                utils.deg_to_hmsstr(((risetime-lst)%24)*15)[0]
                 risetosetstr = "Rise to set time: %s" % \
-                            deg_to_hmsstr(((settime-risetime)%24)*15)[0]
+                            utils.deg_to_hmsstr(((settime-risetime)%24)*15)[0]
                 riselststr = "Rise (LST): %s" % \
-                            deg_to_hmsstr((risetime%24)*15)[0]
+                            utils.deg_to_hmsstr((risetime%24)*15)[0]
                 riseutcstr = "Rise (UTC): %s" % \
-                            deg_to_hmsstr((site.lst_to_utc(risetime, \
+                            utils.deg_to_hmsstr((site.lst_to_utc(risetime, \
                                         date)%24)*15)[0]
                 setlststr = "Set (LST): %s" % \
-                            deg_to_hmsstr((settime%24)*15)[0]
+                            utils.deg_to_hmsstr((settime%24)*15)[0]
                 setutcstr = "Set (UTC): %s" % \
-                            deg_to_hmsstr((site.lst_to_utc(settime, \
+                            utils.deg_to_hmsstr((site.lst_to_utc(settime, \
                                         date)%24)*15)[0]
              
                 srctypestr = "(%s)" % srclist.name
