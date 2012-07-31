@@ -2,6 +2,7 @@ import re
 
 registered_modes = ["graphics", \
                     "batch", \
+                    "text", \
                    ]
 
 def run(modename, *args, **kwargs):
