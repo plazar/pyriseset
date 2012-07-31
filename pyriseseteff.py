@@ -12,9 +12,9 @@ import sourcelist
 
 def main():
     site = sites.load(args.site)
-    
+   
     if (args.utc is not None):
-        args.lst = site.utc_to_lst(args.utc)
+        args.lst = site.utc_to_lst(args.utc, args.date)
 
     if (args.lst is not None) and (args.date is None):
         # A fixed LST is used, but no date is provided.
