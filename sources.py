@@ -272,16 +272,7 @@ class Source(BaseSource):
         grps = match.groupdict()
         if (grps['ra'] is None) and (grps['decl'] is None):
             # Get position from 'psrcat'
-            posn = subprocess.check_output(['psrcat', '-c', 'rajd decjd', \
-                        '-nohead', '-nonumber', '-o', 'short', grps['name']])
-            try:
-                ra_deg_str, decl_deg_str = posn.split()
-            except:
-                raise errors.BadSourceStringFormat("%s is not recognized by " \
-                                            "psrcat." % grps['name'])
-            else:
-                ra_deg = float(ra_deg_str)
-                decl_deg = float(decl_deg_str)
+            ra_deg, decl_deg = cls._get_posn_from_psrcat(grps['name'])
         else:
             if utils.hms_re.match(grps['ra']):
                 ra_deg = utils.hmsstr_to_deg(grps['ra'])
@@ -292,6 +283,21 @@ class Source(BaseSource):
             else:
                 decl_deg = float(grps['decl'])
         return Source(grps['name'], ra_deg, decl_deg, grps['notes'])
+
+    @staticmethod
+    def _get_posn_from_psrcat(psrname):
+        cmd = ['psrcat', '-c', 'rajd decjd', \
+                '-nohead', '-nonumber', '-o', 'short', psrname]
+        posn = utils.execute(cmd)[0]
+        try:
+            ra_deg_str, decl_deg_str = posn.split()
+        except:
+            raise errors.BadSourceStringFormat("%s is not recognized by " \
+                                                "psrcat." % psrname)
+        else:
+            ra_deg = float(ra_deg_str)
+            decl_deg = float(decl_deg_str)
+        return ra_deg, decl_deg
 
 
 class Pulsar(Source):

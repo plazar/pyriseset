@@ -1,5 +1,6 @@
 import re
 import datetime
+import subprocess
 
 import numpy as np
 
@@ -298,3 +299,21 @@ def ecliptic_to_equatorial(eclon, eclat):
     ra_deg = np.rad2deg(ra_rad)
     decl_deg = np.rad2deg(decl_rad)
     return ra_deg, decl_deg
+
+
+def execute(cmd):
+    pipe = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = pipe.communicate()
+    retcode = pipe.returncode
+    if retcode < 0:
+        raise errors.SystemCallError("Execution of command (%s) terminated by signal (%s)!" \
+                                     "\nError msg: %s" % \
+                                    (cmd, -retcode, stderr))
+    elif retcode > 0:
+        raise errors.SystemCallError("Execution of command (%s) failed with status (%s)!"  \
+                                     "\nError msg: %s" % \
+                                (cmd, retcode, stderr))
+    else:
+        # Exit code is 0, which is "Success". Do nothing.
+        pass
+    return (stdout, stderr)

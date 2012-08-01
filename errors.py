@@ -26,3 +26,5 @@ class SourceNeverRises(RiseSetErrors):
 class MultipleRiseSets(RiseSetErrors):
     pass
 
+class SystemCallError(Exception):
+    pass
