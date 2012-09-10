@@ -1,6 +1,6 @@
 import re
 
-registered_modes = ["graphics", \
+registered_modes = ["graphical", \
                     "batch", \
                     "text", \
                    ]
