@@ -5,6 +5,8 @@ registered_modes = ["graphical", \
                     "text", \
                    ]
 
+DEFAULT = 'graphical'
+
 def run(modename, *args, **kwargs):
     matching_modes = [m for m in registered_modes \
                         if re.search(modename, m, re.IGNORECASE)]

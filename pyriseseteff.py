@@ -84,10 +84,10 @@ if __name__=='__main__':
                         testsources=sourcelist.SourceList(name="Test Pulsar"), \
                         calibrators=sourcelist.SourceList(name="Calibrator"))
     parser.add_argument('-m', '--mode', type=str, dest='modename', \
-                        default="graphics", \
+                        default=modes.DEFAULT, \
                         help="The name of the mode to run. To get a list " \
                             "of available modes use --list-modes. " \
-                            "(Default: graphics).")
+                            "(Default: %s)." % modes.DEFAULT)
     parser.add_argument('--list-modes', action=ListModesAction, nargs=0, \
                         help="List registered modes, and exit.")
     parser.add_argument('--update-time', type=float, dest='update_time', \
