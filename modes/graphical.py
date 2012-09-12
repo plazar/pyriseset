@@ -221,13 +221,14 @@ class SkyViewFigure(matplotlib.figure.Figure):
         datetimestrs = []
         if self.lst is None:
             datetimestrs.append("Current date: %s" % \
-                    str(datetime.date.today()))
+                    datetime.date.today().strftime("%b %d, %Y"))
             datetimestrs.append("Current LST: %s" % \
                     utils.deg_to_hmsstr(self.site.lstnow()*15)[0].split('.')[0])
             datetimestrs.append("Current UTC: %s" % \
                     datetime.datetime.utcnow().strftime('%H:%M:%S'))
         else:
-            datetimestrs.append("Date selected: %s" % str(self.date))
+            datetimestrs.append("Date selected: %s" % \
+                    self.date.strftime("%b %d, %Y"))
             datetimestrs.append("LST selected: %s" % \
                     utils.deg_to_hmsstr(self.lst*15)[0])
             datetimestrs.append("UTC selected: %s" % \
