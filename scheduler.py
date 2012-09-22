@@ -174,7 +174,7 @@ def main():
     else:
         date = args.date
     
-    run(site, args.sources, args.start_utc, args.end_utc, args.date)
+    run(site, args.sources, args.start_utc, args.end_utc, date)
 
 
 class AppendSourceCoords(argparse.Action):
