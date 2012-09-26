@@ -12,9 +12,9 @@ import sourcelist
 
 def main():
     site = sites.load(args.site)
-    
+   
     if (args.utc is not None):
-        args.lst = site.utc_to_lst(args.utc)
+        args.lst = site.utc_to_lst(args.utc, args.date)
 
     if (args.lst is not None) and (args.date is None):
         # A fixed LST is used, but no date is provided.
@@ -84,10 +84,10 @@ if __name__=='__main__':
                         testsources=sourcelist.SourceList(name="Test Pulsar"), \
                         calibrators=sourcelist.SourceList(name="Calibrator"))
     parser.add_argument('-m', '--mode', type=str, dest='modename', \
-                        default="graphics", \
+                        default=modes.DEFAULT, \
                         help="The name of the mode to run. To get a list " \
                             "of available modes use --list-modes. " \
-                            "(Default: graphics).")
+                            "(Default: %s)." % modes.DEFAULT)
     parser.add_argument('--list-modes', action=ListModesAction, nargs=0, \
                         help="List registered modes, and exit.")
     parser.add_argument('--update-time', type=float, dest='update_time', \

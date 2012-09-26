@@ -1,8 +1,11 @@
 import re
 
-registered_modes = ["graphics", \
+registered_modes = ["graphical", \
                     "batch", \
+                    "text", \
                    ]
+
+DEFAULT = 'graphical'
 
 def run(modename, *args, **kwargs):
     matching_modes = [m for m in registered_modes \

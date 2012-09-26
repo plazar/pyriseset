@@ -91,7 +91,7 @@ def deg_to_hmsstr(degs, decpnts=0):
     strs = []
     for sign, hour in zip(signs, hours):
         # Add small value so results isn't affected by machine precision.
-        hour += 1e-12 
+        hour += 1e-7 # <1ms 
         h = int(hour)
         min = (hour-h)*60.0
         m = int(min)
