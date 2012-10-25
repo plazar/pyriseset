@@ -67,7 +67,28 @@ class SchedulerFigure(matplotlib.figure.Figure):
         lsttimes = self.site.utc_to_lst(utctimes, date=self.date)
         tickvals = []
         ticklabels = []
-        self.ax = plt.axes((0.1, 0.075, 0.85, 0.775))
+
+        # Add plot of angular separations
+        self.angsep_ax = plt.axes((0.75, 0.075, 0.1, 0.775))
+        nsrcs = len(self.srclist)
+        self.angsep_bars = plt.barh(np.arange(nsrcs), np.zeros(nsrcs), \
+                                    height=0.6, align='center')
+        plt.setp(self.angsep_ax.yaxis.get_ticklabels(), visible=False)
+        plt.setp(self.angsep_ax.xaxis.get_ticklabels(), size='x-small', \
+                                                        rotation=60)
+        plt.xlabel("Angular separation (deg)")
+        
+        # Add plot of slew times
+        self.slew_ax = plt.axes((0.85, 0.075, 0.1, 0.775), \
+                                    sharey=self.angsep_ax)
+        self.slew_bars = plt.barh(np.arange(nsrcs), np.zeros(nsrcs), \
+                                    height=0.6, align='center')
+        plt.xlabel("Slew time (min)")
+        plt.setp(self.slew_ax.yaxis.get_ticklabels(), visible=False)
+        plt.setp(self.slew_ax.xaxis.get_ticklabels(), size='x-small', \
+                                                      rotation=60)
+        
+        self.ax = plt.axes((0.1, 0.075, 0.65, 0.775), sharey=self.angsep_ax)
         clipbox = matplotlib.patches.Rectangle((self.start_utc, -1), \
                                     numhours, len(self.srclist)+2, \
                                     transform=self.ax.transData)
@@ -89,18 +110,23 @@ class SchedulerFigure(matplotlib.figure.Figure):
                     width = hi_utc - lo_utc
                     patch = matplotlib.patches.Rectangle((lo_utc, ii-0.4), \
                                         width, 0.8, transform=self.ax.transData, \
-                                        fc=color, ec=color, picker=5, alpha=0.5)
+                                        fc=color, ec=color, picker=5, alpha=0.5, \
+                                        zorder=1)
                     self.ax.add_patch(patch)
                     patches.append(patch)
             self.up_patches.append(patches)
             tickvals.append(ii)
             ticklabels.append(src.name)
+        self.select_scatt = plt.scatter(0,0, marker='x', lw=2, c='k', \
+                                    s=100, visible=False, zorder=2)
+        self.vertline = plt.axvline(0, c='k', ls='--', visible=False)
+
         plt.yticks(tickvals, ticklabels, size='small')
         plt.xlabel("UTC (on %s)" % self.date.strftime("%b %d, %Y"))
         plt.xlim(self.start_utc, self.end_utc)
         xmnticks = np.arange(np.floor(self.start_utc-1), self.end_utc+1, 0.5)
         self.ax.xaxis.set_minor_locator(matplotlib.ticker.FixedLocator(xmnticks))
-        plt.ylim(-0.5, len(self.srclist)-0.5)
+        plt.ylim(-0.5, nsrcs-0.5)
        
         # Add text
         self.psr_text = plt.figtext(0.1, 0.96, "", size='x-large')
@@ -148,6 +174,47 @@ class SchedulerFigure(matplotlib.figure.Figure):
             lst_setstr = utils.deg_to_hmsstr((lst_settime)*15)[0]
             lst_rs_ranges.append("%s - %s" % (lst_risestr, lst_setstr))
 
+        # Move and show selected point
+        utc = event.mouseevent.xdata
+        self.select_scatt.set_offsets((utc, self.iselected))
+        self.select_scatt.set_visible(True)
+        self.vertline.set_visible(True)
+        self.vertline.set_xdata((utc,utc))
+        
+        # Compute and show angular separations
+        lst = self.site.utc_to_lst(utc, self.date)
+        ra_picked, decl_picked = psr.get_posn(lst, self.date)
+        max_angsep = 0
+        for other, rect in zip(self.srclist, self.angsep_bars): 
+            ra_other, decl_other = other.get_posn(lst, self.date)
+            angsep = utils.angsep(ra_picked, decl_picked, ra_other, decl_other)
+            rect.set_width(angsep)
+            if angsep > max_angsep:
+                max_angsep = angsep
+        self.angsep_ax.set_xlim(0, max_angsep*1.1)
+
+        # Compute and show slew times
+        max_slew = 0
+        alt_picked, az_picked = psr.get_altaz(self.site, lst, self.date)
+        for other, rect in zip(self.srclist, self.slew_bars):
+            if self.site.azspeed is not None and \
+                        self.site.altspeed is not None and \
+                        other.is_visible(self.site, lst, self.date):
+                alt_other, az_other = other.get_altaz(self.site, lst, self.date)
+                altslew = np.abs(alt_other-alt_picked)/float(self.site.altspeed)
+                azslew = np.abs(az_other-az_picked)/float(self.site.azspeed)
+                slew = max(altslew, azslew)
+                rect.set_width(slew)
+                rect.set_facecolor('b')
+                rect.set_hatch('')
+            else:
+                rect.set_width(1e4)
+                rect.set_facecolor('r')
+                rect.set_hatch(r'\/')
+                slew = 0
+            if slew > max_slew:
+                max_slew = slew
+        self.slew_ax.set_xlim(0, max_slew*1.1)
 
         # Update figure's text
         self.psr_text.set_text(psr.name)
