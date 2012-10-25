@@ -14,6 +14,10 @@ class BaseSite(object):
                          # Note: Latitudes North should be positive, 
                          # and latitudes South should be negative.
 
+    azspeed = None # Slew speed in azimuth(in deg/min)
+
+    altspeed = None # Slew speed in altitude (in deg/min)
+
     tzinfo = None # A tzinfo (timezone) object recognized by datetime.
 
     tracking = (lambda alt,az: True) # A function that accepts an 

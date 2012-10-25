@@ -7,6 +7,8 @@ class Effelsberg(base.BaseSite):
     name = "Effelsberg"
     lon = 6.883611
     lat = 50.524722
+    azspeed = 30.0
+    altspeed = 16.0
 
     def tracking(self, alt, az):
         return (90-alt) > 8.1
