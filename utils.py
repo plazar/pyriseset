@@ -298,3 +298,27 @@ def ecliptic_to_equatorial(eclon, eclat):
     ra_deg = np.rad2deg(ra_rad)
     decl_deg = np.rad2deg(decl_rad)
     return ra_deg, decl_deg
+
+
+def angsep(ra1_deg, dec1_deg, ra2_deg, dec2_deg):
+    """Return angular separation (in deg) between two sky positions.
+    
+        Inputs:
+            ra1_deg: R.A. of the first position (in deg).
+            dec1_deg: Dec. of the first position (in deg).
+            ra2_deg: R.A. of the second position (in deg).
+            dec2_deg: Dec. of the second position (in deg).
+
+        Output:
+            angsep_deg: The angular separation between the source
+                positions (in deg).
+    """
+    ra1_rad = np.deg2rad(ra1_deg) 
+    dec1_rad = np.deg2rad(dec1_deg)
+    ra2_rad = np.deg2rad(ra2_deg) 
+    dec2_rad = np.deg2rad(dec2_deg)
+
+    angsep_rad = np.arccos(np.sin(dec1_rad)*np.sin(dec2_rad)+\
+                    np.cos(dec1_rad)*np.cos(dec2_rad)*np.cos(ra1_rad-ra2_rad))
+    angsep_deg = np.rad2deg(angsep_rad)
+    return angsep_deg
