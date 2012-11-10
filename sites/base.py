@@ -1,4 +1,5 @@
 import datetime
+import numpy as np
 import utils
 
 class BaseSite(object):
@@ -32,7 +33,7 @@ class BaseSite(object):
                                      # position cannot be pointed 
                                      # to by the telescope.
 
-    horizon = (lambda az: np.zeros_like(az)) # A function that accepts an 
+    horizon = (lambda self, az: np.zeros_like(az)) # A function that accepts an 
                                              # azimuth value (in degrees - 
                                              # ie a value between 0.0 and 360.0, 
                                              # inclusive) and returns the 
