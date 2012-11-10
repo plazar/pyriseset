@@ -106,6 +106,17 @@ class SkyViewFigure(matplotlib.figure.Figure):
                                     y2=maxza, facecolor='#228B22', \
                                     edgecolor='none', alpha=1.0, zorder=0)
 
+        # Grid of altitudes and azimuths
+        alts, azs = np.meshgrid(np.linspace(0,90, 91), np.linspace(0,360, 361))
+        point_constraint = self.site.pointing(alts, azs)
+        self.horizon_polarax.contourf(np.deg2rad(azs), 90-alts, \
+                        point_constraint, [-1, 0], colors='r', \
+                        alpha=0.5, zorder=3)
+        self.horizon_polarax.contour(np.deg2rad(azs), 90-alts, \
+                        point_constraint, [-1, 0], colors='r', \
+                        zorder=3, linewidths=2)
+
+
         self.sky_fill = self.horizon_polarax.fill_between(az_rad, horizon, \
                                     y2=0, facecolor='none', \
                                     edgecolor='none', alpha=1.0, zorder=-2)
