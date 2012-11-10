@@ -1,5 +1,6 @@
 registered_sites = ["effelsberg", \
-                    ]
+                    "arecibo", \
+                   ]
 
 def load(sitename):
     if sitename in registered_sites:
