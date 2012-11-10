@@ -120,7 +120,9 @@ class BaseSource(object):
                 isvis: True, if the source is above the horizon.
         """
         alt, az = self.get_altaz(site, lst, date)
-        return (alt > site.horizon(az))
+        above_horizon = (alt > site.horizon(az))
+        can_point = site.pointing(alt, az)
+        return above_horizon & can_point
 
     def get_rise_set_times(self, site, date=None):
         """Given an observing site, get the rise and set times
