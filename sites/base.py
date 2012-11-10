@@ -21,13 +21,13 @@ class BaseSite(object):
 
     tzinfo = None # A tzinfo (timezone) object recognized by datetime.
 
-    tracking = (lambda alt,az: True) # A function that accepts an 
+    tracking = (lambda self, alt,az: True) # A function that accepts an 
                                      # Alt/Az pair (in degrees) 
                                      # and returns False if the 
                                      # telescope cannot track 
                                      # through the given position.
     
-    pointing = (lambda alt,az: True) # A function that accepts an 
+    pointing = (lambda self, alt,az: True) # A function that accepts an 
                                      # Alt/Az pair (in degrees) 
                                      # and returns False if the 
                                      # position cannot be pointed 
@@ -40,6 +40,10 @@ class BaseSite(object):
                                              # elevation of the horizon 
                                              # (also in degrees - a value 
                                              # between 0.0 and 90.0).
+
+    def above_horizon(self, alt, az):
+        hor = self.horizon(az)
+        return alt > hor
 
     def __init__(self):
         """Constructor for ObsSite objects.
