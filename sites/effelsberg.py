@@ -7,12 +7,13 @@ class Effelsberg(base.BaseSite):
     name = "Effelsberg"
     lon = 6.883611
     lat = 50.524722
-    azspeed = 30.0
-    altspeed = 16.0
+    azspeed = 30.0 # deg/minute
+    altspeed = 16.0 # deg/minute
 
-    def tracking(self, alt, az):
-        return (90-alt) > 8.1
+    def pointing(self, alt, az):
+        return (8.1 < alt) & (alt < 89)
 
+    # Horizon is based on tabulated data
     horaz = np.array([   0.,    5.,   10.,   15.,   20.,   25.,   30.,   
          35.,   40.,
          45.,   50.,   55.,   60.,   65.,   70.,   75.,   80.,   85.,
