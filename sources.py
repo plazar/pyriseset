@@ -141,7 +141,7 @@ class BaseSource(object):
         """
         lsts = np.linspace(0,24,24*60*60+1, endpoint=True)
         alts, azs = self.get_altaz(site, lsts, date)
-        visible = site.above_horzion(alts, azs)
+        visible = site.above_horizon(alts, azs)
         crosses = np.diff(visible.astype(int))
         risetimes = lsts[np.flatnonzero(crosses==1)+1]
         settimes = lsts[np.flatnonzero(crosses==-1)+1]
