@@ -107,7 +107,7 @@ class SkyViewFigure(matplotlib.figure.Figure):
                                     edgecolor='none', alpha=1.0, zorder=0)
 
         # Grid of altitudes and azimuths
-        alts, azs = np.meshgrid(np.linspace(0,90, 181), np.linspace(0,360, 721))
+        alts, azs = np.meshgrid(np.linspace(0,90, 361), np.linspace(0,360, 721))
         above_horizon = self.site.above_horizon(alts, azs)
         can_point = self.site.pointing(alts, azs)
         self.horizon_polarax.contourf(np.deg2rad(azs), 90-alts, \
