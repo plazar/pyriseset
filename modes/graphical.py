@@ -106,10 +106,22 @@ class SkyViewFigure(matplotlib.figure.Figure):
                                     y2=maxza, facecolor='#228B22', \
                                     edgecolor='none', alpha=1.0, zorder=0)
 
+        # Grid of altitudes and azimuths
+        alts, azs = np.meshgrid(np.linspace(0,90, 361), np.linspace(0,360, 721))
+        above_horizon = self.site.above_horizon(alts, azs)
+        can_point = self.site.pointing(alts, azs)
+        self.horizon_polarax.contourf(np.deg2rad(azs), 90-alts, \
+                        ~above_horizon | can_point, [-1, 0], colors='r', \
+                        alpha=0.5, zorder=3)
+        self.horizon_polarax.contour(np.deg2rad(azs), 90-alts, \
+                        ~above_horizon | can_point, [-1, 0], colors='r', \
+                        zorder=3, linewidths=2)
+        maxpointza = 90-np.min(alts[can_point & above_horizon])
+
         self.sky_fill = self.horizon_polarax.fill_between(az_rad, horizon, \
                                     y2=0, facecolor='none', \
                                     edgecolor='none', alpha=1.0, zorder=-2)
-        self.horizon_polarax.set_rlim(0, maxza)
+        self.horizon_polarax.set_rlim(0, min(maxza, maxpointza+5))
 
         def coord_formatter(az_rad, za):
             az = np.rad2deg(az_rad)%360
@@ -125,11 +137,13 @@ class SkyViewFigure(matplotlib.figure.Figure):
             return string
 
         self.horizon_polarax.format_coord = coord_formatter
-        self.horizon_polarax.yaxis.set_ticklabels([u'80\u00b0', u'70\u00b0', \
-                                                u'60\u00b0', u'50\u00b0', \
-                                                u'40\u00b0', u'30\u00b0', \
-                                                u'20\u00b0', u'10\u00b0', \
-                                                u'0\u00b0'])
+       
+        # Format zenith angle so it is actually displayed as altitude
+        def alt_formatter(za, index):
+            return u"%g\u00b0" % (90-za)
+        fmt = matplotlib.ticker.FuncFormatter(alt_formatter)
+        self.horizon_polarax.yaxis.set_major_formatter(fmt)
+        
         # Celestial Pole
         pole_za_deg = 90-np.abs(self.site.lat)
         if self.site.lat > 0:

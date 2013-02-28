@@ -120,7 +120,9 @@ class BaseSource(object):
                 isvis: True, if the source is above the horizon.
         """
         alt, az = self.get_altaz(site, lst, date)
-        return (alt > site.horizon(az))
+        above_horizon = site.above_horizon(alt, az)
+        can_point = site.pointing(alt, az)
+        return above_horizon & can_point
 
     def get_rise_set_times(self, site, date=None):
         """Given an observing site, get the rise and set times
@@ -139,8 +141,7 @@ class BaseSource(object):
         """
         lsts = np.linspace(0,24,24*60*60+1, endpoint=True)
         alts, azs = self.get_altaz(site, lsts, date)
-        horalts = site.horizon(azs)
-        visible = (alts > horalts)
+        visible = site.above_horizon(alts, azs)
         crosses = np.diff(visible.astype(int))
         risetimes = lsts[np.flatnonzero(crosses==1)+1]
         settimes = lsts[np.flatnonzero(crosses==-1)+1]
@@ -176,7 +177,7 @@ class BaseSource(object):
         posninfo = []
         posninfo.append("R.A. (J2000): %s" % utils.deg_to_hmsstr(ra_deg)[0])
         posninfo.append("Dec. (J2000): %s" % utils.deg_to_dmsstr(decl_deg)[0])
-        if alt > site.horizon(az):
+        if site.above_horizon(alt, az):
             posninfo.append(u"Alt.: %.2f\u00b0" % alt)
             posninfo.append(u"Az.: %.2f\u00b0" % az)
             posninfo.append(u"Alt. above horizon: %.2f\u00b0" % \

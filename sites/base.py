@@ -1,4 +1,5 @@
 import datetime
+import numpy as np
 import utils
 
 class BaseSite(object):
@@ -14,27 +15,35 @@ class BaseSite(object):
                          # Note: Latitudes North should be positive, 
                          # and latitudes South should be negative.
 
+    azspeed = None # Slew speed in azimuth(in deg/min)
+
+    altspeed = None # Slew speed in altitude (in deg/min)
+
     tzinfo = None # A tzinfo (timezone) object recognized by datetime.
 
-    tracking = (lambda alt,az: True) # A function that accepts an 
+    tracking = (lambda self, alt,az: True) # A function that accepts an 
                                      # Alt/Az pair (in degrees) 
                                      # and returns False if the 
                                      # telescope cannot track 
                                      # through the given position.
     
-    pointing = (lambda alt,az: True) # A function that accepts an 
+    pointing = (lambda self, alt,az: True) # A function that accepts an 
                                      # Alt/Az pair (in degrees) 
                                      # and returns False if the 
                                      # position cannot be pointed 
                                      # to by the telescope.
 
-    horizon = (lambda az: np.zeros_like(az)) # A function that accepts an 
+    horizon = (lambda self, az: np.zeros_like(az)) # A function that accepts an 
                                              # azimuth value (in degrees - 
                                              # ie a value between 0.0 and 360.0, 
                                              # inclusive) and returns the 
                                              # elevation of the horizon 
                                              # (also in degrees - a value 
                                              # between 0.0 and 90.0).
+
+    def above_horizon(self, alt, az):
+        hor = self.horizon(az)
+        return alt > hor
 
     def __init__(self):
         """Constructor for ObsSite objects.
