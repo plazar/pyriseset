@@ -4,11 +4,94 @@ import argparse
 import datetime
 
 import sites
+import sites.base
 import modes
 import errors
 import utils
 import sources
 import sourcelist
+
+
+def get_riseset_info(site, src, utc=None, lst=None, date=None):
+    """Convenience function to get rise/set info for a site/source.
+
+        Inputs:
+            site: The observing site to get info for.
+            src: The source to generate info for.
+            utc: The UTC to get info for. (Default: now)
+            lst: The LST to get info for. (Default: now)
+            date: The date to get info for. (Default: now)
+
+        Outputs:
+            riseset_info: A dictionary of rise/set info.
+    """
+    if (utc is not None) and (lst is not None):
+        raise ValueError("Only one of 'utc' and 'lst' can be provided.")
+    if not isinstance(site, sites.base.BaseSite):
+        site = sites.load(site)
+    if not isinstance(src, sources.Source):
+        src = sources.Source.from_string(src)
+    if utc is not None:
+        lst = site.utc_to_lst(utc, date)
+    if (lst is not None) and (date is None):
+        # A fixed LST is used, but no date is provided.
+        # Fix date to today's date.
+        date = datetime.date.today()
+    if (lst is None) and (date is None):
+        date = datetime.date.today()
+        lst = site.lstnow()
+    if (lst is None) and (date is not None):
+        # Want current LST for a specified date. This doesn't make sense.
+        raise ValueError("Incompatible inputs: 'lst' is None, but 'date' is not None!")
+    rs_info = {'msg':"", 'circumpolar':False, 'neverrises':False}
+    ra_deg, dec_deg = src.get_posn(lst, date)
+    rs_info['ra_deg'] = ra_deg
+    rs_info['dec_deg'] = dec_deg
+    rs_info['ra_hmsstr'] = utils.deg_to_hmsstr(ra_deg, 2)[0]
+    rs_info['dec_dmsstr'] = utils.deg_to_dmsstr(dec_deg, 2)[0]
+    alt, az = src.get_altaz(site, lst, date)
+    rs_info['alt_deg'] = alt[0]
+    rs_info['az_deg'] = az[0]
+    try:
+        risetime, settime = src.get_rise_set_times(site, date)
+    except errors.SourceIsCircumpolar:
+        rs_info['msg'] = "Source is circumpolar."
+        rs_info['circumpolar'] = True
+        rs_info['is_visible'] = True
+        rs_info['next_riseset'] = None
+    except errors.SourceNeverRises:
+        rs_info['msg'] = "Source never rises."
+        rs_info['neverrises'] = True
+        rs_info['is_visible'] = False
+        rs_info['next_riseset'] = None
+    except errors.MultipleRiseSets:
+        rs_info['msg'] = "Multiple rise/set times?!"
+    except:
+        # Any other error
+        raise
+    else:
+        if src.is_visible(site, lst, date):
+            rs_info['is_visible'] = True
+            rs_info['next_riseset'] = \
+                    utils.deg_to_hmsstr(((settime-lst)%24)*15)[0]
+        else:
+            rs_info['is_visible'] = False
+            rs_info['next_riseset'] = \
+                        utils.deg_to_hmsstr(((risetime-lst)%24)*15)[0]
+        rs_info['uptime'] = \
+                    utils.deg_to_hmsstr(((settime-risetime)%24)*15)[0]
+        rs_info['rise_lst'] = \
+                    utils.deg_to_hmsstr((risetime%24)*15)[0]
+        rs_info['rise_utc'] = \
+                    utils.deg_to_hmsstr((site.lst_to_utc(risetime, \
+                                date)%24)*15)[0]
+        rs_info['set_lst'] = \
+                    utils.deg_to_hmsstr((settime%24)*15)[0]
+        rs_info['set_utc'] = \
+                    utils.deg_to_hmsstr((site.lst_to_utc(settime, \
+                                date)%24)*15)[0]
+    return rs_info
+
 
 def main():
     site = sites.load(args.site)
