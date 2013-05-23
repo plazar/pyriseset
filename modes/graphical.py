@@ -36,7 +36,7 @@ class SkyViewFigure(matplotlib.figure.Figure):
         self.bgstars = sourcelist.SourceList(name='Background Stars', \
                                   src_cls=sources.BackgroundStar, \
                                   pickable=False)
-        bgstarfn = os.path.join(os.path.dirname(__file__, 'bsc.txt'))
+        bgstarfn = os.path.join(os.path.dirname(__file__), 'bsc.txt')
         self.bgstars.extend_from_file(bgstarfn)
 
         self.lst = lst
