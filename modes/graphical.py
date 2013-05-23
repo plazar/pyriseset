@@ -1,4 +1,5 @@
 import datetime
+import os.path
 
 import numpy as np
 import matplotlib
@@ -35,7 +36,8 @@ class SkyViewFigure(matplotlib.figure.Figure):
         self.bgstars = sourcelist.SourceList(name='Background Stars', \
                                   src_cls=sources.BackgroundStar, \
                                   pickable=False)
-        self.bgstars.extend_from_file('bsc.txt')
+        bgstarfn = os.path.join(os.path.dirname(__file__, 'bsc.txt'))
+        self.bgstars.extend_from_file(bgstarfn)
 
         self.lst = lst
         self.date = date
