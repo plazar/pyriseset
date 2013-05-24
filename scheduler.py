@@ -105,8 +105,8 @@ class SchedulerFigure(matplotlib.figure.Figure):
             patches = []
             if pulsar.count():
                 for upblock in np.ma.flatnotmasked_contiguous(pulsar):
-                    lo_utc = utctimes[upblock.start]
-                    hi_utc = utctimes[upblock.stop]
+                    lo_utc = utctimes[max(0, upblock.start)]
+                    hi_utc = utctimes[min(upblock.stop, len(utctimes)-1)]
                     width = hi_utc - lo_utc
                     patch = matplotlib.patches.Rectangle((lo_utc, ii-0.4), \
                                         width, 0.8, transform=self.ax.transData, \
