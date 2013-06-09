@@ -10,6 +10,7 @@ import errors
 import utils
 import sources
 import sourcelist
+import actions
 
 
 def get_riseset_info(site, src, utc=None, lst=None, date=None):
@@ -107,42 +108,6 @@ def main():
     modes.run(args.modename, site, args.lst, args.date, args.targets, \
                 args.testsources, args.calibrators, args)
 
-class AppendSourceCoords(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string):
-        srclist = getattr(namespace, self.dest)
-        srclist.append(sources.Source.from_string(values))
-
-
-class ExtendSourceCoords(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string):
-        srclist = getattr(namespace, self.dest)
-        srclist.extend_from_file(values)
-
-
-class ParseTime(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string):
-        timestr = values
-        if utils.hms_re.match(timestr):
-            setattr(namespace, self.dest, utils.hmsstr_to_deg(timestr)/15.0)
-        else:
-            # Assume time is in decimal hours
-            setattr(namespace, self.dest, float(timestr))
-
-
-class ParseDate(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string):
-        datestr = values
-        date = utils.parse_datestr()    
-        setattr(namespace, self.dest, date)
-
-
-class ListSitesAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string):
-        print "Available observing sites:"
-        for sitename in sites.registered_sites:
-            print "    %s" % sitename
-        sys.exit()
-
 
 class ListModesAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
@@ -163,53 +128,59 @@ if __name__=='__main__':
                         help="The name of the mode to run. To get a list " \
                             "of available modes use --list-modes. " \
                             "(Default: %s)." % modes.DEFAULT)
-    parser.add_argument('--list-modes', action=ListModesAction, nargs=0, \
+    parser.add_argument('--list-modes', action=ListModesAction, \
+                        nargs=0, \
                         help="List registered modes, and exit.")
     parser.add_argument('--update-time', type=float, dest='update_time', \
                         default=5, \
                         help="Number of minutes between updates of the " \
                             "figure, if running interactively. (Default: 5)")
     parser.add_argument('-p', '--target', type=str, \
-                        action=AppendSourceCoords, dest='targets', \
+                        action=actions.AppendSourceCoords, dest='targets', \
                         help="A string describing a target. Format should " \
                             "be '<name> <ra> <decl> [<notes>]'. " \
                             "Be sure to quote the string.")
     parser.add_argument('--target-file', type=str, \
-                        action=ExtendSourceCoords, dest='targets', \
+                        action=actions.ExtendSourceCoords, \
+                        dest='targets', \
                         help="Read targets from files.")
     parser.add_argument('-t', '--testsource', type=str, \
-                        action=AppendSourceCoords, dest='testsources', \
+                        action=actions.AppendSourceCoords, \
+                        dest='testsources', \
                         help="A string describing a testsource. Format should " \
                             "be '<name> <ra> <decl> [<notes>]'. " \
                             "Be sure to quote the string.")
     parser.add_argument('--testsource-file', type=str, \
-                        action=ExtendSourceCoords, dest='testsources', \
+                        action=actions.ExtendSourceCoords, \
+                        dest='testsources', \
                         help="Read testsources from files.")
     parser.add_argument('-c', '--calibrator', type=str, \
-                        action=AppendSourceCoords, dest='calibrators', \
+                        action=actions.AppendSourceCoords, \
+                        dest='calibrators', \
                         help="A string describing a calibrator. Format should " \
                             "be '<name> <ra> <decl> [<notes>]'. " \
                             "Be sure to quote the string.")
     parser.add_argument('--calibrator-file', type=str, \
-                        action=ExtendSourceCoords, dest='calibrators', \
+                        action=actions.ExtendSourceCoords, dest='calibrators', \
                         help="Read calibrators from files.")
     timegrp = parser.add_mutually_exclusive_group()
     timegrp.add_argument('--lst', dest='lst', default=None, \
-                        action=ParseTime, \
+                        action=actions.ParseTime, \
                         help="Local Sidereal Time to use. Can be given " \
                             "as a string (in HH:MM:SS.SS format). Or as " \
                             "a floating point number (in hours). " \
                             "(Default: now!)")
     timegrp.add_argument('--utc', dest='utc', default=None, \
-                        action=ParseTime, \
+                        action=actions.ParseTime, \
                         help="Universal Time to use. Can be given " \
                             "as a string (in HH:MM:SS.SS format). Or as " \
                             "a floating point number (in hours). " \
                             "(Default: now!)")
     parser.add_argument('--date', type=str, default=None, \
-                        action=ParseDate, \
+                        action=actions.ParseDate, \
                         help="Date to use. (Default: today)")
-    parser.add_argument('--list-sites', action=ListSitesAction, nargs=0, \
+    parser.add_argument('--list-sites', action=actions.ListSitesAction, \
+                        nargs=0, \
                         help="List registered observing sites, and exit.")
     parser.add_argument('--site', dest='site', type=str, \
                         default=sites.registered_sites[0], \

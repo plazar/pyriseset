@@ -1,13 +1,14 @@
 import sys
 import argparse
-
-import utils
-import sites
-import sources
 import datetime
 
 import numpy as np
 import matplotlib.pyplot as plt
+
+import utils
+import sites
+import sources
+import actions
 
 DEADTIME = 60 # time between scans (in s)
 

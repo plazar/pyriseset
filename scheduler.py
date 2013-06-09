@@ -13,6 +13,7 @@ import errors
 import utils
 import sources
 import sourcelist
+import actions
 
 
 class SchedulerFigure(matplotlib.figure.Figure):
@@ -244,79 +245,35 @@ def main():
     run(site, args.sources, args.start_utc, args.end_utc, date)
 
 
-class AppendSourceCoords(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string):
-        srclist = getattr(namespace, self.dest)
-        srclist.append(sources.Source.from_string(values))
-
-
-class ExtendSourceCoords(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string):
-        srclist = getattr(namespace, self.dest)
-        srclist.extend_from_file(values)
-
-
-class ParseTime(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string):
-        timestr = values
-        if utils.hms_re.match(timestr):
-            setattr(namespace, self.dest, utils.hmsstr_to_deg(timestr)/15.0)
-        else:
-            # Assume time is in decimal hours
-            setattr(namespace, self.dest, float(timestr))
-
-
-class ParseDate(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string):
-        datestr = values
-        match = utils.date_re.match(datestr)
-        if match is None:
-            raise errors.BadDateFormat("The string %s cannot be parsed " \
-                                "as a date. Expected format (YYYY-MM-DD)." \
-                                % datestr)
-        else:
-            grp = match.groupdict()
-            date = datetime.date(int(grp['year']), int(grp['month']), \
-                                    int(grp['day']))
-            setattr(namespace, self.dest, date)
-
-
-class ListSitesAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string):
-        print "Available observing sites:"
-        for sitename in sites.registered_sites:
-            print "    %s" % sitename
-        sys.exit()
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Plot sources time ranges " \
                         "when sources are above the horizon.")
     parser.set_defaults(sources=sourcelist.SourceList(name="sources"))
     parser.add_argument('-p', '--target', type=str, \
-                        action=AppendSourceCoords, dest='sources', \
+                        action=actions.AppendSourceCoords, dest='sources', \
                         help="A string describing a target. Format should " \
                             "be '<name> <ra> <decl> [<notes>]'. " \
                             "Be sure to quote the string.")
     parser.add_argument('--target-file', type=str, \
-                        action=ExtendSourceCoords, dest='sources', \
+                        action=actions.ExtendSourceCoords, dest='sources', \
                         help="Read targets from files.")
     
     parser.add_argument('--start-utc', dest='start_utc', required=True, \
-                        action=ParseTime, \
+                        action=actions.ParseTime, \
                         help="Universal Time to start at. Can be given " \
                             "as a string (in HH:MM:SS.SS format). Or as " \
                             "a floating point number (in hours).")
     parser.add_argument('--end-utc', dest='end_utc', required=True, \
-                        action=ParseTime, \
+                        action=actions.ParseTime, \
                         help="Universal Time to end at. Can be given " \
                             "as a string (in HH:MM:SS.SS format). Or as " \
                             "a floating point number (in hours).")
     parser.add_argument('--date', type=str, default=None, \
-                        action=ParseDate, \
+                        action=actions.ParseDate, \
                         help="Date to use (in YYYY-MM-DD format). " \
                             "(Default: today)")
-    parser.add_argument('--list-sites', action=ListSitesAction, nargs=0, \
+    parser.add_argument('--list-sites', action=actions.ListSitesAction, \
+                        nargs=0, \
                         help="List registered observing sites, and exit.")
     parser.add_argument('--site', dest='site', type=str, \
                         default=sites.registered_sites[0], \

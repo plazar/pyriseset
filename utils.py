@@ -365,3 +365,22 @@ def parse_datestr(datestr):
         date = datetime.date(int(grp['year']), int(grp['month']), \
                                  int(grp['day']))
     return date
+
+
+def parse_timestr(timestr):
+    """Parse a time string.
+
+        Input:
+            timestr: A time string in hh:mm:ss format, or a 
+                floating-point number of hours since midnight.
+
+        Output:
+            time: The number of hours since midnight, 
+                floating-point value.
+    """
+    if hms_re.match(timestr):
+        time = hmsstr_to_deg(timestr)/15.0
+    else:
+        # Assume time is in decimal hours
+        time = float(timestr)
+    return time
