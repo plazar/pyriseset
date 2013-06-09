@@ -242,6 +242,7 @@ def ut_to_gst(ut, date):
         Output:
             gst: The GST, in decimal hours.
     """
+    ut = np.asarray(ut)
     mjd = date_to_mjd(date.year, date.month, int(date.day))
     jd = mjd + 2400000.5
     S = jd - 2451545.0
