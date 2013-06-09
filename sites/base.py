@@ -15,9 +15,11 @@ class BaseSite(object):
                          # Note: Latitudes North should be positive, 
                          # and latitudes South should be negative.
 
-    azspeed = None # Slew speed in azimuth(in deg/min)
+    azspeed = np.inf # Slew speed in azimuth(in deg/min)
 
-    altspeed = None # Slew speed in altitude (in deg/min)
+    altspeed = np.inf # Slew speed in altitude (in deg/min)
+
+    deadtime = 0 # Deadtime when switching targets (in s)
 
     tzinfo = None # A tzinfo (timezone) object recognized by datetime.
 
@@ -126,3 +128,23 @@ class BaseSite(object):
                 GST: Sidereal time in Greenwich, in hours.
         """
         return lst - self.lon/15.0
+
+
+    def slew_time(self, altaz_source, altaz_target):
+        """Compute slew time between two positions.
+
+            Inputs:
+                altaz_source: A tuple of Alt-Az coords where the 
+                        telescope starts.
+                altaz_target: A tuple of Alt-Az coords where the
+                        telescope is to be positioned.
+
+            Output:
+                slewtime: The slew time (in s).
+        """
+        alt_source, az_source = altaz_source
+        alt_target, az_target = altaz_target
+        altslew = np.abs(alt_target-alt_source)/float(self.altspeed)
+        azslew = np.abs(az_target-az_source)/float(self.azspeed)
+        slewtime = max(altslew, azslew)*60 # in seconds
+        return slewtime + self.deadtime

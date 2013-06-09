@@ -27,6 +27,7 @@ def main():
                         int(endutc-startutc)*3600+1, endpoint=True)
 
     utc = startutc
+    prev_altaz = None
     for line in obs_sched:
         # parse line for observing schedule
         name, ra_hms, dec_dms, tint = line.split()
@@ -39,6 +40,11 @@ def main():
         # Plot track for full session
         lst = site.utc_to_lst(fullobs, date)
         alt, az = src.get_altaz(site, lst, date)
+
+        # Include (approx) time to switch source
+        if prev_altaz:
+            utc += site.slew_time(prev_altaz, (alt[0], az[0]))/3600.0
+
         plt.plot(fullobs, alt, 'k:')
         #plt.text(scan[np.argmax(alt)], np.max(alt), name, size='xx-small', \
         #            va='bottom', ha='center')
@@ -50,7 +56,8 @@ def main():
         plt.plot(scan, alt, 'k-')    
         plt.text(utc+tint/3600.0/2.0, np.max(alt), name, size='xx-small', \
                     va='bottom', ha='center')
-        utc += tint/3600.0+DEADTIME/3600.0
+        utc += tint/3600.0
+        prev_altaz = (alt[-1],az[-1])
 
     #    if utc >= 24:
     #        utc -= 24
