@@ -289,13 +289,6 @@ class ListSitesAction(argparse.Action):
         sys.exit()
 
 
-class ListModesAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string):
-        print "Available modes:"
-        for modename in modes.registered_modes:
-            print "    %s" % modename
-        sys.exit()
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Plot sources time ranges " \
                         "when sources are above the horizon.")
