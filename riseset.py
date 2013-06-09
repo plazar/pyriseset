@@ -132,16 +132,8 @@ class ParseTime(argparse.Action):
 class ParseDate(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
         datestr = values
-        match = utils.date_re.match(datestr)
-        if match is None:
-            raise errors.BadDateFormat("The string %s cannot be parsed " \
-                                "as a date. Expected format (YYYY-MM-DD)." \
-                                % datestr)
-        else:
-            grp = match.groupdict()
-            date = datetime.date(int(grp['year']), int(grp['month']), \
-                                    int(grp['day']))
-            setattr(namespace, self.dest, date)
+        date = utils.parse_datestr()    
+        setattr(namespace, self.dest, date)
 
 
 class ListSitesAction(argparse.Action):

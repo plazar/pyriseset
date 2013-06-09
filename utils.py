@@ -5,6 +5,8 @@ import warnings
 
 import numpy as np
 
+import errors
+
 OBLIQUITY = 23.441884 # degrees
 OBLIQRAD = np.deg2rad(OBLIQUITY) # radians
 
@@ -342,3 +344,24 @@ def angsep(ra1_deg, dec1_deg, ra2_deg, dec2_deg):
                     np.cos(dec1_rad)*np.cos(dec2_rad)*np.cos(ra1_rad-ra2_rad))
     angsep_deg = np.rad2deg(angsep_rad)
     return angsep_deg
+
+
+def parse_datestr(datestr):
+    """Parse a date string.
+
+        Input:
+            datestr: A date string in YYYY-MM-DD format.
+
+        Output:
+            date: A datetime.date object.
+    """
+    match = date_re.match(datestr)
+    if match is None:
+        raise errors.BadDateFormat("The string %s cannot be parsed " \
+                            "as a date. Expected format (YYYY-MM-DD)." \
+                            % datestr)
+    else:
+        grp = match.groupdict()
+        date = datetime.date(int(grp['year']), int(grp['month']), \
+                                 int(grp['day']))
+    return date
