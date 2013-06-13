@@ -34,7 +34,7 @@ class ParseTime(argparse.Action):
 class ParseDate(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
         datestr = values
-        date = utils.parse_datestr()    
+        date = utils.parse_datestr(datestr)
         setattr(namespace, self.dest, date)
 
 
