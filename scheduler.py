@@ -258,16 +258,16 @@ if __name__ == '__main__':
                         action=actions.ExtendSourceCoords, dest='sources', \
                         help="Read targets from files.")
     
-    parser.add_argument('--start-utc', dest='start_utc', required=True, \
-                        action=actions.ParseTime, \
+    parser.add_argument('--start-utc', dest='start_utc', \
+                        action=actions.ParseTime, default=0, \
                         help="Universal Time to start at. Can be given " \
                             "as a string (in HH:MM:SS.SS format). Or as " \
-                            "a floating point number (in hours).")
-    parser.add_argument('--end-utc', dest='end_utc', required=True, \
-                        action=actions.ParseTime, \
+                            "a floating point number (in hours). (Default: 0)")
+    parser.add_argument('--end-utc', dest='end_utc', \
+                        action=actions.ParseTime, default=24, \
                         help="Universal Time to end at. Can be given " \
                             "as a string (in HH:MM:SS.SS format). Or as " \
-                            "a floating point number (in hours).")
+                            "a floating point number (in hours). (Default: 24)")
     parser.add_argument('--date', type=str, default=None, \
                         action=actions.ParseDate, \
                         help="Date to use (in YYYY-MM-DD format). " \
