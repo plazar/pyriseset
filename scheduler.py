@@ -202,7 +202,7 @@ class SchedulerFigure(matplotlib.figure.Figure):
                         self.site.altspeed is not None and \
                         other.is_visible(self.site, lst, self.date):
                 alt_other, az_other = other.get_altaz(self.site, lst, self.date)
-                slew = site.slew_time((alt_picked, az_picked), \
+                slew = self.site.slew_time((alt_picked, az_picked), \
                                        (alt_other, az_other))
                 slew /= 60 # in minutes
                 rect.set_width(slew)
