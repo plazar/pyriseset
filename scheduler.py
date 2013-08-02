@@ -257,7 +257,6 @@ if __name__ == '__main__':
     parser.add_argument('--target-file', type=str, \
                         action=actions.ExtendSourceCoords, dest='sources', \
                         help="Read targets from files.")
-    
     parser.add_argument('--start-utc', dest='start_utc', \
                         action=actions.ParseTime, default=0, \
                         help="Universal Time to start at. Can be given " \
