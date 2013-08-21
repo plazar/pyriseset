@@ -4,10 +4,11 @@ import errors
 import utils
 
 def run(site, lst, date, targets, testsources, calibrators, args):
-    if lst is None:
-        lst = site.lstnow()
     if date is None:
         date = datetime.date.today()
+    if lst is None:
+        utc = utils.utcnow()
+        lst = site.utc_to_lst(utc=utc, date=date)
     
     datestr = date.strftime("%b %d, %Y")
     lststr = utils.deg_to_hmsstr(lst*15)[0]
