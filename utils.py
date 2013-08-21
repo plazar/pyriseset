@@ -150,18 +150,24 @@ def deg_to_dmsstr(degs, decpnts=0):
             posn = "%s%.2d:%.2d:0%s" % (sign, d, m, secfmt % s)
         strs.append(posn)
     return strs
-        
+
+
+def utcnow():
+    """Return the current UTC in decimal hours.
+    """
+    utc = datetime.datetime.utcnow()
+    hours = (utc.hour + (utc.minute + (utc.second + \
+                    (utc.microsecond)/1.0e6)/60.0)/60.0)
+    return hours
+
 
 def mjdnow():
     """Return the MJD now.
     """
     utc = datetime.datetime.utcnow()
-    dayfrac = utc.day + (utc.hour + \
-                            (utc.minute + \
-                                (utc.second + \
-                                    (utc.microsecond) \
-                            /1.0e6)/60.0)/60.0)/24.0
-    return date_to_mjd(utc.year, utc.month, dayfrac)
+    dayfrac = (utc.hour + (utc.minute + (utc.second + \
+                    (utc.microsecond)/1.0e6)/60.0)/60.0)/24.0
+    return date_to_mjd(utc.year, utc.month, utc.day+dayfrac)
 
 
 def date_to_mjd(year, month, day):
