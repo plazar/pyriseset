@@ -148,3 +148,43 @@ class BaseSite(object):
         azslew = np.abs(az_target-az_source)/float(self.azspeed)
         slewtime = max(altslew, azslew)*60 # in seconds
         return slewtime + self.deadtime
+
+
+    def get_skyposn(self, alt, az, lst=None):
+        """Given where the telescope is oriented (in altitude and azimuth)
+            and an LST return what sky position (in equatorial coordinates)
+            is being pointed at.
+
+            Inputs:
+                alt: Altitude (in degrees)
+                az: Azimuth (in degrees)
+                lst: The site's local sidereal time (in hours; Default: Use current LST)
+
+            Output:
+                ra: The J2000 right ascension (in deg)
+                decl: The J2000 declination (in deg)
+        """
+        if lst is None:
+            lst = self.lstnow()
+        
+        # Convert values to radians
+        alt_rad = np.deg2rad(alt)
+        az_rad = np.deg2rad(az-180) # Subtract 180 to match convention of equations
+        lat_rad = np.deg2rad(self.lat)
+
+        # Compute hour angle in radians
+        ha_rad = np.arctan2(np.sin(az_rad), \
+                        np.cos(az_rad)*np.sin(lat_rad) + \
+                                np.tan(alt_rad)*np.cos(lat_rad))
+        # Convert hour angle from radians to degrees
+        ha_deg = np.rad2deg(ha_rad)
+        # Compute right ascension (in deg) - convert LST to degrees
+        ra_deg = lst*15.0 - ha_deg
+        ra_deg %= 360.0
+        # Compute declination in radians
+        decl_rad = np.arcsin(np.sin(lat_rad)*np.sin(alt_rad) - \
+                        np.cos(lat_rad)*np.cos(alt_rad)*np.cos(az_rad))
+        # Convert declination to degrees
+        decl_deg = np.rad2deg(decl_rad)
+
+        return ra_deg, decl_deg
