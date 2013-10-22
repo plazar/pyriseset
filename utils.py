@@ -199,6 +199,47 @@ def date_to_mjd(year, month, day):
     return JD.squeeze() - 2400000.5
 
 
+def mjd_to_date(mjd):
+    """Convert Modified Julian Day (MJD) to a date.
+        
+        Input:
+            mjd: Modified Julian Day
+
+        (Follow Jean Meeus' Astronomical Algorithms, 2nd Ed., Ch. 7)
+    """
+    JD = np.atleast_1d(mjd) + 2400000.5
+    
+    if np.any(JD<0.0):
+        raise ValueError("This function does not apply for JD < 0.")
+
+    JD += 0.5
+
+    # Z is integer part of JD
+    Z = np.floor(JD)
+    # F is fractional part of JD
+    F = np.mod(JD, 1)
+
+    A = np.copy(Z)
+    alpha = np.floor((Z-1867216.25)/36524.25)
+    A[Z>=2299161] = Z + 1 + alpha - np.floor(0.25*alpha)
+
+    B = A + 1524
+    C = np.floor((B-122.1)/365.25)
+    D = np.floor(365.25*C)
+    E = np.floor((B-D)/30.6001)
+
+    day = B - D - np.floor(30.6001*E) + F
+    month = E - 1
+    ii = (E==14.0) | (E==15.0)
+    month[ii] = (E - 13.0)[ii]
+    year = C - 4716
+    ii = (month==1.0) | (month==2.0)
+    year[ii] = (C - 4715)[ii]
+
+    return (year.astype('int').squeeze(), month.astype('int').squeeze(), \
+                day.squeeze())
+
+
 def gst_to_utc(gst, date):
     """Return the UTC corresponding to the given Greenwich mean sidereal time
         on the given date.
@@ -258,6 +299,7 @@ def ut_to_gst(ut, date):
     gst = (ut*1.002737909 + T0) % 24
     return gst
 
+
 def mjd_to_gst(mjd):
     """Given Modified Julian Day (mjd) return Greenwich mean sidereal time
         in hours.
@@ -285,6 +327,22 @@ def mjd_to_gst(mjd):
     gst = UT + T0
     gst = gst % 24
     return gst
+
+
+def mjd_to_datetime(mjd):
+    """Given an MJD return a datetime object with the corresponding
+        date and UTC time.
+
+        Input:
+            mjd: The MJD to convert.
+
+        Output:
+            utc: A datetime object with the date and UTC time.
+    """
+    year, month, day = mjd_to_date(mjd)
+    obsdate = datetime.datetime(year, month, day)
+    utc = gst_to_utc(mjd_to_gst(mjd), obsdate)
+    return obsdate + datetime.timedelta(hours=utc)
 
 
 def ecliptic_to_equatorial(eclon, eclat):
@@ -369,7 +427,7 @@ def parse_datestr(datestr):
                             % datestr)
     else:
         grp = match.groupdict()
-        date = datetime.date(int(grp['year']), int(grp['month']), \
+        date = datetime.datetime(int(grp['year']), int(grp['month']), \
                                  int(grp['day']))
     return date
 
