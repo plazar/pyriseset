@@ -427,7 +427,7 @@ def parse_datestr(datestr):
                             % datestr)
     else:
         grp = match.groupdict()
-        date = datetime.datetime(int(grp['year']), int(grp['month']), \
+        date = datetime.date(int(grp['year']), int(grp['month']), \
                                  int(grp['day']))
     return date
 
