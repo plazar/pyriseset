@@ -24,6 +24,7 @@ def loop(stdscr, site, lst, date, targets, testsources, calibrators, args):
         time.sleep(1)
 
 def run(site, lst, date, targets, testsources, calibrators, args):
+    raise NotImplementedError("The text mode is not implemented...")
     try:
         curses.wrapper(loop, site, lst, date, targets, testsources, \
                         calibrators, args)
