@@ -3,6 +3,7 @@ registered_sites = ["effelsberg", \
                     "jodrell", \
                     "gbt", \
                     "lofar", \
+                    "ubb", \
                    ]
 
 def load(sitename):
