@@ -393,6 +393,10 @@ class SkyViewFigure(matplotlib.figure.Figure):
             # print "Picked calibrator source:", self.calibrators[ind]
             self.selected = self.calibrators[ind]
             self.selected_list = self.calibrators
+        elif event.artist == self.bgstars_scatt:
+            # print "Picked background star:", self.bgstars[ind]
+            self.selected = self.bgstars[ind]
+            self.selected_list = self.bgstars
         self.update()
 
     def on_key_press(self, event):

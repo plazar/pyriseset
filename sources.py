@@ -448,6 +448,7 @@ class BackgroundStar(BaseSource):
     colour = 'y'
     edgecolour = 'none'
     zorder = -1
+    highlight_size = 200
 
     source_re = re.compile(r"^(?P<name>[^ ]+) +(?P<ra>[^ ]+) +" \
                 "(?P<decl>[^ ]+) +(?P<mag>[^ ]+)( +-- *(?P<notes>.*))?$")
