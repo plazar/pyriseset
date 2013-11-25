@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 import argparse
 import datetime
@@ -15,6 +17,8 @@ DEADTIME = 60 # time between scans (in s)
 
 
 def main():
+    if args.date is None:
+        date = datetime.date.today()
     site = sites.load(args.site)
 
     fig = plt.figure()
@@ -25,10 +29,10 @@ def main():
 
     for src in args.sources:
         # Plot track for full session
-        lst = site.utc_to_lst(fullobs, args.date)
-        alt, az = src.get_altaz(site, lst, args.date)
+        lst = site.utc_to_lst(fullobs, date)
+        alt, az = src.get_altaz(site, lst, date)
         #alt -= site.horizon(az)
-        is_visible = src.is_visible(site, lst, args.date)
+        is_visible = src.is_visible(site, lst, date)
 
         isup = np.ma.masked_where(np.bitwise_not(is_visible), alt)
         isset = np.ma.masked_where(is_visible, alt)
@@ -40,7 +44,7 @@ def main():
     plt.axhline(0, color='k', ls='-')
 
     ax.set_ylim(0, 90)
-    ax.set_xlabel("UTC on %s (hours)" % args.date.strftime("%b %d, %Y"))
+    ax.set_xlabel("UTC on %s (hours)" % date.strftime("%b %d, %Y"))
     ax.set_ylabel("Elevation at %s (deg)" % site.name)
     plt.show()
 
