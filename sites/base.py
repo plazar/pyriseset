@@ -169,7 +169,7 @@ class BaseSite(object):
         
         # Convert values to radians
         alt_rad = np.deg2rad(alt)
-        az_rad = np.deg2rad(az-180) # Subtract 180 to match convention of equations
+        az_rad = np.deg2rad(az)
         lat_rad = np.deg2rad(self.lat)
 
         # Compute hour angle in radians
