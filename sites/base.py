@@ -188,3 +188,54 @@ class BaseSite(object):
         decl_deg = np.rad2deg(decl_rad)
 
         return ra_deg, decl_deg
+
+    def get_telposn(self, ra_deg, decl_deg, lst=None):
+        """Compute the orientation of the telescope (altitude and azimuth)
+            given a sky position (in equatorial coordinates) and LST.
+
+            Inputs:
+                ra_deg: The J2000 right ascension (in deg)
+                decl_deg: The J2000 declination (in deg)
+                lst: The site's local sidereal time (in hours; Default: Use current LST)
+
+            Outputs
+                alt: Altitude (in degrees)
+                az: Azimuth (in degrees)
+        """
+        if lst is None:
+            lst = self.lstnow()
+        
+        # Convert values to radians
+        ra_rad = np.deg2rad(ra_deg)
+        decl_rad = np.deg2rad(decl_deg)
+        lat_rad = np.deg2rad(self.lat)
+        lst_rad = np.deg2rad(15*lst)
+
+        # Compute hour angle in radians
+        ha_rad = lst_rad - ra_rad
+
+        az_rad = np.arctan2(np.sin(ha_rad), 
+                            np.cos(ha_rad)*np.sin(lat_rad) - 
+                            np.tan(decl_rad)*np.cos(lat_rad))
+        # Convert azimuth to degrees
+        az_deg = np.rad2deg(az_rad)%360
+        # Compute altitude
+        alt_rad = np.arcsin(np.sin(lat_rad)*np.sin(decl_rad) + 
+                            np.cos(lat_rad)*np.cos(decl_rad)*np.cos(ha_rad))
+        # Convert altitude to degrees
+        alt_deg = np.rad2deg(alt_rad)
+
+        return alt_deg, az_deg
+       
+    def mjd_to_lst(self, mjd):
+        """Given an MJD convert it to LST at the observing site.
+
+            Input:
+                mjd: The MJD to convert.
+
+            Output:
+                lst: The corresponding LST (in hours)
+        """
+        gst = utils.mjd_to_gst(mjd)
+        lst = self.gst_to_lst(gst)
+        return lst
