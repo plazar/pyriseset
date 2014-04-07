@@ -1,5 +1,5 @@
-import base
-import utils
+from . import base
+from .. import utils
 
 class Jodrell(base.BaseSite):
     name = "Jodrell"

@@ -1,8 +1,8 @@
 import numpy as np
 import scipy.interpolate
 
-import base
-import utils
+from . import base
+from .. import utils
 
 class GreenBankTelescope(base.BaseSite):
     # Horizon and zenith hole come from email exchange

@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.interpolate
 
-import base
+from . import base
 
 class Effelsberg(base.BaseSite):
     name = "Effelsberg"

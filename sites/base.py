@@ -1,6 +1,6 @@
 import datetime
 import numpy as np
-import utils
+from .. import utils
 
 class BaseSite(object):
     """An object to store observing site information.

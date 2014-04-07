@@ -1,5 +1,5 @@
-import base
-import utils
+from . import base
+from .. import utils
 
 class Arecibo(base.BaseSite):
     name = "Arecibo"
