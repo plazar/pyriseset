@@ -271,12 +271,12 @@ class Source(BaseSource):
                                         "Format should be " \
                                         "'<name> [<ra> <decl>] [-- <notes>]'.")
         grps = match.groupdict()
-        grps['ra'] = grps['ra'].strip()
-        grps['decl'] = grps['decl'].strip()
         if (grps['ra'] is None) and (grps['decl'] is None):
             # Get position from 'psrcat'
             ra_deg, decl_deg = cls._get_posn_from_psrcat(grps['name'])
         else:
+            grps['ra'] = grps['ra'].strip()
+            grps['decl'] = grps['decl'].strip()
             if utils.hms_re.match(grps['ra']):
                 ra_deg = utils.hmsstr_to_deg(grps['ra'])
             else:
