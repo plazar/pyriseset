@@ -1,6 +1,7 @@
 import datetime
 import numpy as np
-from .. import utils
+
+from pyriseset import utils
 
 class BaseSite(object):
     """An object to store observing site information.

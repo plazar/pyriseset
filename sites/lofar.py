@@ -1,8 +1,8 @@
 import numpy as np
 import scipy.interpolate
 
-from . import base
-from .. import utils
+from pyriseset.sites import base
+from pyriseset import utils
 
 class Lofar(base.BaseSite):
     name = "LOFAR"

@@ -1,5 +1,5 @@
-from . import base
-from .. import utils
+from pyriseset.sites import base
+from pyriseset import utils
 
 class Jodrell(base.BaseSite):
     name = "Jodrell"

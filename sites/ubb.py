@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.interpolate
 
-from . import effelsberg
+from pyriseset.sites import effelsberg
 
 class EffelsbergUBB(effelsberg.Effelsberg):
     name = "Effelsberg (UBB)"

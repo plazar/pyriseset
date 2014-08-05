@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.interpolate
 
-from . import base
+from pyriseset.sites import base
 
 class Effelsberg(base.BaseSite):
     name = "Effelsberg"
