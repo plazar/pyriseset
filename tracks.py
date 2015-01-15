@@ -19,6 +19,8 @@ DEADTIME = 60 # time between scans (in s)
 def main():
     if args.date is None:
         date = datetime.date.today()
+    else:
+        date = args.date
     site = sites.load(args.site)
 
     fig = plt.figure()
