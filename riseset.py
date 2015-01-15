@@ -140,7 +140,7 @@ if __name__=='__main__':
                         help="A string describing a target. Format should " \
                             "be '<name> <ra> <decl> [<notes>]'. " \
                             "Be sure to quote the string.")
-    parser.add_argument('--target-file', type=str, \
+    parser.add_argument('-P', '--target-file', type=str, \
                         action=actions.ExtendSourceCoords, \
                         dest='targets', \
                         help="Read targets from files.")
@@ -150,7 +150,7 @@ if __name__=='__main__':
                         help="A string describing a testsource. Format should " \
                             "be '<name> <ra> <decl> [<notes>]'. " \
                             "Be sure to quote the string.")
-    parser.add_argument('--testsource-file', type=str, \
+    parser.add_argument('-T', '--testsource-file', type=str, \
                         action=actions.ExtendSourceCoords, \
                         dest='testsources', \
                         help="Read testsources from files.")
@@ -160,7 +160,7 @@ if __name__=='__main__':
                         help="A string describing a calibrator. Format should " \
                             "be '<name> <ra> <decl> [<notes>]'. " \
                             "Be sure to quote the string.")
-    parser.add_argument('--calibrator-file', type=str, \
+    parser.add_argument('-C', '--calibrator-file', type=str, \
                         action=actions.ExtendSourceCoords, dest='calibrators', \
                         help="Read calibrators from files.")
     timegrp = parser.add_mutually_exclusive_group()
