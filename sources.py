@@ -124,13 +124,15 @@ class BaseSource(object):
         can_point = site.pointing(alt, az)
         return above_horizon & can_point
 
-    def get_rise_set_times(self, site, date=None):
+    def get_rise_set_times(self, site, date=None, tolerant=False):
         """Given an observing site, get the rise and set times
             for the source.
 
             Input:
                 site: An ObsSite object representing the observing site.
                 date: datetime.date object. (Default: today).
+                tolerant: Do not raise error if source has multiple rise/sets. 
+                    (Default: raise error)
 
             Outputs:
                 rise: The rise time in LST, in hours.
@@ -140,8 +142,7 @@ class BaseSource(object):
                 or if it never rises.
         """
         lsts = np.linspace(0,24,24*60*60+1, endpoint=True)
-        alts, azs = self.get_altaz(site, lsts, date)
-        visible = site.above_horizon(alts, azs) & site.pointing(alts, azs)
+        visible = self.is_visible(site, lsts, date) 
         crosses = np.diff(visible.astype(int))
         risetimes = lsts[np.flatnonzero(crosses==1)+1]
         settimes = lsts[np.flatnonzero(crosses==-1)+1]
@@ -156,7 +157,10 @@ class BaseSource(object):
             else:
                 raise errors.SourceNeverRises
         elif len(risetimes) > 1:
-            raise errors.MultipleRiseSets
+            if tolerant:
+                return risetimes, settimes
+            else:
+                raise errors.MultipleRiseSets
         else:
             return risetimes[0], settimes[0]
 
