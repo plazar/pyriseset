@@ -10,6 +10,16 @@ import errors
 OBLIQUITY = 23.441884 # degrees
 OBLIQRAD = np.deg2rad(OBLIQUITY) # radians
 
+DMS_STYLE_TO_SEP = {"colons": (':', ':', ''),
+                    "spaces": (' ', ' ', ''),
+                    "units": ('d ', "' ", '"'),
+                    "none": ('', '', '')}
+
+HMS_STYLE_TO_SEP = {"colons": (':', ':', ''),
+                    "spaces": (' ', ' ', ''),
+                    "units": ('h ', 'm ', 's'),
+                    "none": ('', '', '')}
+
 hms_re = re.compile(r'^(?P<sign>[-+])?(?P<hour>\d{1,2}):(?P<min>\d{2})' \
                      r'(?::(?P<sec>\d{2}(?:.\d+)?))?$')
 dms_re = re.compile(r'^(?P<sign>[-+])?(?P<deg>\d{2}):(?P<min>\d{2})' \
@@ -78,17 +88,27 @@ def dmsstr_to_deg(dmsstr):
     return degs
 
 
-def deg_to_hmsstr(degs, decpnts=0):
+def deg_to_hmsstr(degs, decpnts=0, style='colons'):
     """Convert degrees to HH:MM:SS.SS sexigesimal string.
         
         Inputs:
             degs: A list of angles, in degrees.
             decpnts: Number of decimal points to show for seconds.
                 (Default: 0)
+            style: The style to show string in. Options are:
+                    "colons"
+                    "spaces"
+                    "units"
+                (Default: "colons")
 
         Outputs:
             hmsstrs: A list of hms strings.
     """
+    if style.lower() not in HMS_STYLE_TO_SEP:
+        raise ValueError("Unrecognized style for degree to HMS-string " 
+                         "conversion: '%s'. Recognized styles: '%s'" % 
+                         (style, "', '".join(HMS_STYLE_TO_SEP.keys())))
+    seps = HMS_STYLE_TO_SEP[style]
     signs = np.atleast_1d(np.sign(degs))
     hours = np.atleast_1d(np.abs(degs)/15.0)
     strs = []
@@ -108,24 +128,38 @@ def deg_to_hmsstr(degs, decpnts=0):
         else:
             secfmt = "%."+("%d"%decpnts)+"f"
         if (s >= 9.9995):
-            posn = "%s%.2d:%.2d:%s" % (sign, h, m, secfmt % s)
+            posn = "%s%.2d%s%.2d%s%s%s" % (sign, h, seps[0], m, seps[1], 
+                                            secfmt % s, seps[2])
         else:
-            posn = "%s%.2d:%.2d:0%s" % (sign, h, m, secfmt % s)
+            posn = "%s%.2d%s%.2d%s0%s%s" % (sign, h, seps[0], m, seps[1], 
+                                            secfmt % s, seps[2])
         strs.append(posn)
     return strs
         
 
-def deg_to_dmsstr(degs, decpnts=0):
+def deg_to_dmsstr(degs, decpnts=0, style='colons', explicit_sign=False):
     """Convert degrees to DD:MM:SS.SS sexigesimal string.
         
         Inputs:
             degs: A list of angles, in degrees.
             decpnts: Number of decimal points to show for seconds.
                 (Default: 0)
+            style: The style to show string in. Options are:
+                    "colons"
+                    "spaces"
+                    "units"
+                (Default: "colons")
+            explicit_sign: If True, always show a sign, even if positive.
+                (Default: False)
 
         Outputs:
             dmsstrs: A list of dms strings.
     """
+    if style.lower() not in DMS_STYLE_TO_SEP:
+        raise ValueError("Unrecognized style for degree to DMS-string " 
+                         "conversion: '%s'. Recognized styles: '%s'" % 
+                         (style, "', '".join(DMS_STYLE_TO_SEP.keys())))
+    seps = DMS_STYLE_TO_SEP[style]
     signs = np.atleast_1d(np.sign(degs))
     degs = np.atleast_1d(np.abs(degs))
     strs = []
@@ -138,6 +172,8 @@ def deg_to_dmsstr(degs, decpnts=0):
         s = (min-m)*60.0
         if sign == -1:
             sign = "-"
+        elif explicit_sign:
+            sign = "+"
         else:
             sign = ""
         if decpnts < 0:
@@ -145,9 +181,11 @@ def deg_to_dmsstr(degs, decpnts=0):
         else:
             secfmt = "%."+("%d"%decpnts)+"f"
         if (s >= 9.9995):
-            posn = "%s%.2d:%.2d:%s" % (sign, d, m, secfmt % s)
+            posn = "%s%.2d%s%.2d%s%s%s" % (sign, d, seps[0], m, seps[1], 
+                                            secfmt % s, seps[2])
         else:
-            posn = "%s%.2d:%.2d:0%s" % (sign, d, m, secfmt % s)
+            posn = "%s%.2d%s%.2d%s0%s%s" % (sign, d, seps[0], m, seps[1], 
+                                            secfmt % s, seps[2])
         strs.append(posn)
     return strs
 
@@ -343,6 +381,32 @@ def mjd_to_datetime(mjd):
     obsdate = datetime.datetime(year, month, day)
     utc = gst_to_utc(mjd_to_gst(mjd), obsdate)
     return obsdate + datetime.timedelta(hours=utc)
+
+
+def datetime_to_mjd(dt, gregorian=True):
+    """Given a datetime.datetime object return the corresponding
+        MJD. This function will check the timezone of the datetime
+        object and find the corresponding UTC time. If the datetime
+        object does not have any timezone info UTC will be assumed.
+
+        Input:
+            dt: Datetime object.
+            gregorian:  - True for Gregorian calendar (Default)
+                        - False for Julian calendar
+
+        Outputs:
+            MJD
+    """
+    if dt.tzinfo is not None:
+        dtutc = dt.astimezone(UTC_TZ)
+    else:
+        dtutc = dt
+    dayfrac = dtutc.day + (dtutc.hour + \
+                            (dtutc.minute + \
+                                (dtutc.second + \
+                                    (dtutc.microsecond) \
+                            /1.0e6)/60.0)/60.0)/24.0
+    return date_to_mjd(dtutc.year, dtutc.month, dayfrac)
 
 
 def ecliptic_to_equatorial(eclon, eclat):
