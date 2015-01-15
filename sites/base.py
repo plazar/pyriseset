@@ -239,4 +239,5 @@ class BaseSite(object):
         """
         gst = utils.mjd_to_gst(mjd)
         lst = self.gst_to_lst(gst)
+        lst %= 24
         return lst
