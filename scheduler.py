@@ -21,6 +21,7 @@ class SchedulerFigure(matplotlib.figure.Figure):
                 date=None, ccycle=['#191970', '#8B0000', '#006400', 
                                     '#C71585', '#FFD700', \
                                     '#333333', '#8B4513'], \
+                show_extra_panels=True,
                 *args, **kwargs):
         """Constructor for SchedulerFigure.
 
@@ -32,6 +33,8 @@ class SchedulerFigure(matplotlib.figure.Figure):
                 date: The date to use, a datetime.date object (Default: today).
                 ccycle: Matplotlib color cycle to use. 
                     (Default: ['b', 'g', 'r', 'c', 'm', 'y'])
+                show_extra_panels: If True, show slew time and angular separation
+                    between sources. (Default: True)
 
             Outputs:
                 sched: The SchedulerFigure instance.
@@ -42,6 +45,7 @@ class SchedulerFigure(matplotlib.figure.Figure):
         self.start_utc = start_utc
         self.end_utc = end_utc
         self.date = date
+        self.show_extra_panels = show_extra_panels
 
         if ccycle is None:
             self.ccycle = plt.rcParams['axes.color_cycle']
@@ -69,30 +73,37 @@ class SchedulerFigure(matplotlib.figure.Figure):
         tickvals = []
         ticklabels = []
 
-        # Add plot of angular separations
-        self.angsep_ax = plt.axes((0.75, 0.075, 0.1, 0.775))
         nsrcs = len(self.srclist)
-        self.angsep_bars = plt.barh(np.arange(nsrcs), np.zeros(nsrcs), \
-                                    height=0.6, align='center')
-        plt.setp(self.angsep_ax.yaxis.get_ticklabels(), visible=False)
-        plt.setp(self.angsep_ax.xaxis.get_ticklabels(), size='x-small', \
-                                                        rotation=60)
-        plt.xlabel("Angular separation (deg)")
-        
-        # Add plot of slew times
-        self.slew_ax = plt.axes((0.85, 0.075, 0.1, 0.775), \
-                                    sharey=self.angsep_ax)
-        self.slew_bars = plt.barh(np.arange(nsrcs), np.zeros(nsrcs), \
-                                    height=0.6, align='center')
-        plt.xlabel("Slew time (min)")
-        plt.setp(self.slew_ax.yaxis.get_ticklabels(), visible=False)
-        plt.setp(self.slew_ax.xaxis.get_ticklabels(), size='x-small', \
-                                                      rotation=60)
-        
-        self.ax = plt.axes((0.1, 0.075, 0.65, 0.775), sharey=self.angsep_ax)
-        clipbox = matplotlib.patches.Rectangle((self.start_utc, -1), \
-                                    numhours, len(self.srclist)+2, \
-                                    transform=self.ax.transData)
+        if self.show_extra_panels:
+            # Add plot of angular separations
+            self.angsep_ax = plt.axes((0.75, 0.075, 0.1, 0.775))
+            self.angsep_bars = plt.barh(np.arange(nsrcs), np.zeros(nsrcs), \
+                                        height=0.6, align='center')
+            plt.setp(self.angsep_ax.yaxis.get_ticklabels(), visible=False)
+            plt.setp(self.angsep_ax.xaxis.get_ticklabels(), size='x-small', \
+                                                            rotation=60)
+            plt.xlabel("Angular separation (deg)")
+            
+            # Add plot of slew times
+            self.slew_ax = plt.axes((0.85, 0.075, 0.1, 0.775), \
+                                        sharey=self.angsep_ax)
+            self.slew_bars = plt.barh(np.arange(nsrcs), np.zeros(nsrcs), \
+                                        height=0.6, align='center')
+            plt.xlabel("Slew time (min)")
+            plt.setp(self.slew_ax.yaxis.get_ticklabels(), visible=False)
+            plt.setp(self.slew_ax.xaxis.get_ticklabels(), size='x-small', \
+                                                          rotation=60)
+            
+            self.ax = plt.axes((0.1, 0.075, 0.65, 0.775), sharey=self.angsep_ax)
+            clipbox = matplotlib.patches.Rectangle((self.start_utc, -1), \
+                                        numhours, len(self.srclist)+2, \
+                                        transform=self.ax.transData)
+        else:
+            self.ax = plt.axes((0.1, 0.075, 0.85, 0.775))
+            clipbox = matplotlib.patches.Rectangle((self.start_utc, -1), \
+                                        numhours, len(self.srclist)+2, \
+                                        transform=self.ax.transData)
+            
         self.up_patches = []
         for ii, src in enumerate(self.srclist):
             is_visible = src.is_visible(self.site, lsttimes, self.date)
@@ -123,10 +134,28 @@ class SchedulerFigure(matplotlib.figure.Figure):
         self.vertline = plt.axvline(0, c='k', ls='--', visible=False)
 
         plt.yticks(tickvals, ticklabels, size='small')
-        plt.xlabel("UTC (on %s)" % self.date.strftime("%b %d, %Y"))
         plt.xlim(self.start_utc, self.end_utc)
         xmnticks = np.arange(np.floor(self.start_utc-1), self.end_utc+1, 0.5)
         self.ax.xaxis.set_minor_locator(matplotlib.ticker.FixedLocator(xmnticks))
+        self.ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda xx, ii: "%g" % (xx % 24)))
+        maxutc = np.max(utctimes)
+        minutc = np.min(utctimes)
+        if minutc < 0 or maxutc > 24:
+            startday = int(np.floor(minutc/24.0))
+            endday = int(np.ceil(maxutc/24.0))
+            for ii in range(startday, endday):
+                lo = max(minutc, ii*24)
+                hi = min(maxutc, (ii+1)*24)
+                trans = self.ax.transData
+                date = self.date+datetime.timedelta(days=ii)
+                plt.text(ii*24+0.25, -0.25, date.strftime("%b %d, %Y"), 
+                         size='small', transform=trans, ha='left', va='bottom',
+                         clip_on=True, rotation=90)
+                plt.axvline(ii*24, ls='-', c='#999999', zorder=-1)
+            plt.xlabel("UTC (hours)")
+        else:
+            plt.xlabel("UTC (hours; %s)" % self.date.strftime("%b %d, %Y"))
+                
         plt.ylim(-0.5, nsrcs-0.5)
        
         # Add text
@@ -181,41 +210,42 @@ class SchedulerFigure(matplotlib.figure.Figure):
         self.select_scatt.set_visible(True)
         self.vertline.set_visible(True)
         self.vertline.set_xdata((utc,utc))
-        
-        # Compute and show angular separations
-        lst = self.site.utc_to_lst(utc, self.date)
-        ra_picked, decl_picked = psr.get_posn(lst, self.date)
-        max_angsep = 0
-        for other, rect in zip(self.srclist, self.angsep_bars): 
-            ra_other, decl_other = other.get_posn(lst, self.date)
-            angsep = utils.angsep(ra_picked, decl_picked, ra_other, decl_other)
-            rect.set_width(angsep)
-            if angsep > max_angsep:
-                max_angsep = angsep
-        self.angsep_ax.set_xlim(0, max_angsep*1.1)
 
-        # Compute and show slew times
-        max_slew = 0
-        alt_picked, az_picked = psr.get_altaz(self.site, lst, self.date)
-        for other, rect in zip(self.srclist, self.slew_bars):
-            if self.site.azspeed is not None and \
-                        self.site.altspeed is not None and \
-                        other.is_visible(self.site, lst, self.date):
-                alt_other, az_other = other.get_altaz(self.site, lst, self.date)
-                slew = self.site.slew_time((alt_picked, az_picked), \
-                                       (alt_other, az_other))
-                slew /= 60 # in minutes
-                rect.set_width(slew)
-                rect.set_facecolor('b')
-                rect.set_hatch('')
-            else:
-                rect.set_width(1e4)
-                rect.set_facecolor('r')
-                rect.set_hatch(r'\/')
-                slew = 0
-            if slew > max_slew:
-                max_slew = slew
-        self.slew_ax.set_xlim(0, max_slew*1.1)
+        if self.show_extra_panels:
+            # Compute and show angular separations
+            lst = self.site.utc_to_lst(utc, self.date)
+            ra_picked, decl_picked = psr.get_posn(lst, self.date)
+            max_angsep = 0
+            for other, rect in zip(self.srclist, self.angsep_bars): 
+                ra_other, decl_other = other.get_posn(lst, self.date)
+                angsep = utils.angsep(ra_picked, decl_picked, ra_other, decl_other)
+                rect.set_width(angsep)
+                if angsep > max_angsep:
+                    max_angsep = angsep
+            self.angsep_ax.set_xlim(0, max_angsep*1.1)
+ 
+            # Compute and show slew times
+            max_slew = 0
+            alt_picked, az_picked = psr.get_altaz(self.site, lst, self.date)
+            for other, rect in zip(self.srclist, self.slew_bars):
+                if self.site.azspeed is not None and \
+                            self.site.altspeed is not None and \
+                            other.is_visible(self.site, lst, self.date):
+                    alt_other, az_other = other.get_altaz(self.site, lst, self.date)
+                    slew = self.site.slew_time((alt_picked, az_picked), \
+                                           (alt_other, az_other))
+                    slew /= 60 # in minutes
+                    rect.set_width(slew)
+                    rect.set_facecolor('b')
+                    rect.set_hatch('')
+                else:
+                    rect.set_width(1e4)
+                    rect.set_facecolor('r')
+                    rect.set_hatch(r'\/')
+                    slew = 0
+                if slew > max_slew:
+                    max_slew = slew
+            self.slew_ax.set_xlim(0, max_slew*1.1)
 
         # Update figure's text
         self.psr_text.set_text(psr.name)
@@ -227,10 +257,12 @@ class SchedulerFigure(matplotlib.figure.Figure):
         self.canvas.draw()
         
 
-def run(site, srclist, start_utc, end_utc, date=None):
+def run(site, srclist, start_utc, end_utc, date=None,
+        show_extra_panels=True):
     fig = plt.figure(figsize=(11,8), FigureClass=SchedulerFigure, \
                         site=site, srclist=srclist, start_utc=start_utc, \
-                        end_utc=end_utc, date=date)
+                        end_utc=end_utc, date=date, 
+                        show_extra_panels=show_extra_panels)
     fig.plot()
     plt.show()
 
@@ -242,7 +274,8 @@ def main():
     else:
         date = args.date
     
-    run(site, args.sources, args.start_utc, args.end_utc, date)
+    run(site, args.sources, args.start_utc, args.end_utc, date,
+        show_extra_panels=args.extra_info)
 
 
 if __name__ == '__main__':
@@ -254,7 +287,7 @@ if __name__ == '__main__':
                         help="A string describing a target. Format should " \
                             "be '<name> <ra> <decl> [<notes>]'. " \
                             "Be sure to quote the string.")
-    parser.add_argument('--target-file', type=str, \
+    parser.add_argument('-P', '--target-file', type=str, \
                         action=actions.ExtendSourceCoords, dest='sources', \
                         help="Read targets from files.")
     parser.add_argument('--start-utc', dest='start_utc', \
@@ -280,5 +313,8 @@ if __name__ == '__main__':
                             "'--list-sites' to get a list of accepted " \
                             "sites. (Default: '%s')" % \
                             sites.registered_sites[0])
+    parser.add_argument('-x', '--extra', dest='extra_info', action='store_true',
+                        help="Include extra panels showing angular separation "
+                             "and slew time between sources. (Default: Omit panels)")
     args = parser.parse_args()
     main()
