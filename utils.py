@@ -20,10 +20,10 @@ HMS_STYLE_TO_SEP = {"colons": (':', ':', ''),
                     "units": ('h ', 'm ', 's'),
                     "none": ('', '', '')}
 
-hms_re = re.compile(r'^(?P<sign>[-+])?(?P<hour>\d{1,2}):(?P<min>\d{2})' \
-                     r'(?::(?P<sec>\d{2}(?:.\d+)?))?$')
-dms_re = re.compile(r'^(?P<sign>[-+])?(?P<deg>\d{2}):(?P<min>\d{2})' \
-                     r'(?::(?P<sec>\d{2}(?:.\d+)?))?$')
+hms_re = re.compile(r'^(?P<sign>[-+])?(?P<hour>\d{1,2})(?P<sep1>:| ||h ?)(?P<min>\d{2})' \
+                     r'(?:(?P<sep2>:| ||m ?)(?:(?P<sec>\d{2}(?:.\d+)?)(?P<sep3>s|))?)?$')
+dms_re = re.compile(r'^(?P<sign>[-+])?(?P<deg>\d{2})(?P<sep1>:| ||d ?)(?P<min>\d{2})' \
+                     r'(?:(?P<sep2>:| ||\' ?)(?:(?P<sec>\d{2}(?:.\d+)?)(?P<sep3>"|))?)?$')
 date_re = re.compile(r'^(?P<year>\d{4})(?P<sep>[-/ ]?)(?P<month>\d{2})(?P=sep)(?P<day>\d{2})$')
 
 
@@ -53,7 +53,7 @@ def hmsstr_to_deg(hmsstr):
                 float(d['sec'])/3600.0
 
         hours[i] = sign*hour
-
+        #print d['sep1'], d['sep2'], d['sep3']
     return hours*15
 
 
@@ -82,9 +82,8 @@ def dmsstr_to_deg(dmsstr):
                 float(d['min'])/60.0 + \
                 float(d['sec'])/3600.0
 
-        degs[i] = deg
-
-    degs = sign*degs
+        degs[i] = sign*deg
+        #print d['sep1'], d['sep2'], d['sep3']
     return degs
 
 
