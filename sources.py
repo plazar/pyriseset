@@ -66,7 +66,7 @@ class BaseSource(object):
         """
         raise NotImplementedError
 
-    def get_altaz(self, site, lst=None, date=None):
+    def get_altaz(self, site, lst=None, date=None, utc=False):
         """Calculate the altitude and azimuth of a source given
             the longitude and latitude of an observatory.
  
@@ -74,11 +74,20 @@ class BaseSource(object):
                 site: The ObsSite object representing the observing site.
                 lst: Local sidereal time, in hours. (Default: now).
                 date: datetime.date object (Default: today).
+                utc: If True, time provided is actually a UTC time. 
+                    (Default: False)
  
             Output:
                 alt: The source's altitude, in degrees.
                 az: The source's azimuth, in degrees.
         """
+        if utc:
+            if lst is None:
+                raise ValueError("No time is given. How can it be in UTC?")
+            else:
+                # 'lst' is actually a UTC time, convert it to LST
+                lst = site.utc_to_lst(lst, date=date)
+            
         if lst is None:
             lst = site.lstnow()
         ra_deg, decl_deg = self.get_posn(lst, date)
