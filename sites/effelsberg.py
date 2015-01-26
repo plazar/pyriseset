@@ -2,6 +2,8 @@ import numpy as np
 import scipy.interpolate
 
 from pyriseset.sites import base
+from pyriseset import utils
+from pyriseset import sources
 
 class Effelsberg(base.BaseSite):
     name = "Effelsberg"
@@ -9,6 +11,7 @@ class Effelsberg(base.BaseSite):
     lat = 50.524722
     azspeed = 30.0 # deg/minute
     altspeed = 16.0 # deg/minute
+    deadtime = 15.0 # seconds
 
     def pointing(self, alt, az):
         return (8.1 < alt) & (alt < 89)
@@ -34,5 +37,54 @@ class Effelsberg(base.BaseSite):
         18.85,  18.5 ,  19.97,  16.97,  10.82,   8.  ,   8.  ,   8.3 ,   
         9.48,  10.32,   12.05,  13.3 ,  15.58,  16.73,  19.03,  21.27])
     horizon = scipy.interpolate.interp1d(horaz, horalt, 'linear')
-       
+
+    def parse_obs_script(self, fn):
+        """Parse an observing script formatted for the specific site.
+
+            Return a list of tuples containg each of the commands
+            requested. Valid output commands are "obs" and "setup".
+
+            Input:
+                fn: The name of the observing script to parse.
+
+            Output:
+                cmds: A list of tuples describing the commands.
+        """
+        cmds = []
+        with open(fn, 'r') as ff:
+            for origline in ff:
+                line, sep, comment = origline.partition('#')
+                line = line.strip()
+                if not line:
+                    continue
+                split = [part.strip() for part in line.split(';')]
+                if split[0].startswith("FE:"):
+                    # Change receiver
+                    rcvr = split[0].split(':')[1]
+                    cmds.append(('setup', 15, 'Switch receiver to %s' % rcvr))
+                else:
+                    # Observation
+                    name = split[0]
+                    info = {}
+                    for sp in split[1:]:
+                        ii = sp.index(' ')
+                        info[sp[:ii]] = sp[ii:].strip()
+                    if (info["CoordinateSystem"] != "Equatorial") or \
+                            (info["Equinox"] != "J2000"):
+                        raise ValueError("Not sure how to deal with coordinates:\n    %s" %
+                                         origline)
+                    else:
+                        duration = float(info['SCANTime'])
+                        ra_deg = utils.hmsstr_to_deg(info['ObjectLongitude'])
+                        decl_deg = utils.dmsstr_to_deg(info['ObjectLatitude'])
+                        decl_deg += float(info['LatOff'])
+                        if info['PMODE'] != 'Search':
+                            note = 'Calibration'
+                        else:
+                            note = ""
+                        src = sources.Source(name, ra_deg, decl_deg, "")
+                        cmds.append(("obs", duration, src, note))
+        return cmds
+
+
 Site = Effelsberg 

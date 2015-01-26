@@ -241,3 +241,18 @@ class BaseSite(object):
         lst = self.gst_to_lst(gst)
         lst %= 24
         return lst
+
+    def parse_obs_script(self, fn):
+        """Parse an observing script formatted for the specific site.
+
+            Return a list of tuples containg each of the commands
+            requested. Valid output commands are "obs" and "setup".
+
+            Input:
+                fn: The name of the observing script to parse.
+
+            Output:
+                cmds: A list of tuples describing the commands.
+        """
+        raise NotImplementedError("Parsing of observing scripts is not "
+                                  "implemented for site '%s'!" % self.name)
