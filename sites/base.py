@@ -256,3 +256,18 @@ class BaseSite(object):
         """
         raise NotImplementedError("Parsing of observing scripts is not "
                                   "implemented for site '%s'!" % self.name)
+
+    def format_obs_script_command(self, cmd, *args):
+        """Return a valid observing script command.
+
+            Inputs:
+                cmd: A recognized command.
+                *args: Additional arguments
+
+            Output:
+                cmd: The command string to insert into the
+                    observing script.
+        """
+        raise NotImplementedError("Formatting of observing script commands "
+                                  "is not implemented for site '%s'!" %
+                                  self.name)
