@@ -5,6 +5,20 @@ from pyriseset.sites import base
 from pyriseset import utils
 from pyriseset import sources
 
+RCVRS = {"S60mm": {'ver': '2',
+                   'freq': '4.850',
+                   'name': 'S60mm'},
+         "S36mm": {'ver': '5',
+                   'freq': '8.350',
+                   'name': 'S36mm'}
+        }
+SCAN_TEMPLATE = "%(name)s ; CoordinateSystem Equatorial ; " \
+                "Equinox J2000 ; ObjectLongitude %(ra)s ; " \
+                "ObjectLatitude %(dec)s ; LatOff %(latoff)s ; " \
+                "PMODE %(calmode)s ; SCANTime %(length)s ; " \
+                "TimeSYS UTC ; StartTime now"
+
+
 class Effelsberg(base.BaseSite):
     name = "Effelsberg"
     lon = 6.883611
@@ -85,6 +99,54 @@ class Effelsberg(base.BaseSite):
                         src = sources.Source(name, ra_deg, decl_deg, "")
                         cmds.append(("obs", duration, src, note))
         return cmds
+
+    def format_obs_script_command(self, cmd, **info):
+        """Return a valid observing script command.
+
+            Inputs:
+                cmd: A recognized command.
+                **info: Additional keyword arguments
+
+            Output:
+                lines: The command lines to insert into the
+                    observing script.
+        """
+        lines = []
+        cmd = cmd.lower()
+        if cmd == 'receiver':
+            # Set receiver
+            rcvr = info['name']
+            if rcvr not in RCVRS:
+                raise ValueError("Receiver '%s' is not recognized!" % rcvr)
+            lines.append("FE:%(name)s ; VERn %(ver)s ; Frequency %(freq)s ; "
+                         "SideBand Upper ; Horn 0" % RCVRS[rcvr])
+        elif cmd == 'pulsar':
+            src = info['src']
+            details = {'name': src.name,
+                       'length': info['length'],
+                       'ra': utils.deg_to_hmsstr(src.ra_deg, decpnts=3,
+                                                 style='units')[0],
+                       'dec': utils.deg_to_dmsstr(src.decl_deg, decpnts=2,
+                                                  style='units')[0],
+                       'calmode': "Search",
+                       'latoff': "0.0"}
+            lines.append(SCAN_TEMPLATE % details)
+            cal = info['cal']
+            if cal > 0:
+                # Cal scan goes before pulsar
+                details['calmode'] = "CalFE"
+                details['latoff'] = "0.5"
+                details['name'] += "_R"
+                details['length'] = abs(cal)
+                lines[-1:-1] = [SCAN_TEMPLATE % details]
+            elif cal < 0:
+                # Cal scan goes after pulsar
+                details['calmode'] = "CalFE"
+                details['latoff'] = "0.5"
+                details['name'] += "_R"
+                lines.append(SCAN_TEMPLATE % details)
+
+        return lines
 
 
 Site = Effelsberg 
