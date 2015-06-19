@@ -176,6 +176,9 @@ if __name__=='__main__':
                             "as a string (in HH:MM:SS.SS format). Or as " \
                             "a floating point number (in hours). " \
                             "(Default: now!)")
+    timegrp.add_argument('--mjd', dest='mjd', type=float, default=None, \
+                         action=actions.ParseMJD, \
+                         help="MJD to use. (Default: now!)")
     parser.add_argument('--date', type=str, default=None, \
                         action=actions.ParseDate, \
                         help="Date to use. (Default: today)")
