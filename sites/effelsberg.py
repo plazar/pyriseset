@@ -5,7 +5,10 @@ from pyriseset.sites import base
 from pyriseset import utils
 from pyriseset import sources
 
-RCVRS = {"S60mm": {'ver': '2',
+RCVRS = {"S110mm": {'ver': '1',
+                    'freq': '2.6395',
+                    'name': 'S110mm'},
+         "S60mm": {'ver': '2',
                    'freq': '4.850',
                    'name': 'S60mm'},
          "S36mm": {'ver': '5',
