@@ -24,6 +24,16 @@ class ExtendSourceCoords(argparse.Action):
         srclist.extend_from_file(values)
 
 
+class ParseMJD(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string):
+        mjd = values
+        dt = utils.mjd_to_datetime(mjd)
+        time = dt.time()
+        hours = time.hour + (time.minute + (time.second + time.microsecond*1e-6)/60.0)/60.0
+        setattr(namespace, 'utc', hours)
+        setattr(namespace, 'date', dt.date())
+
+
 class ParseTime(argparse.Action):
     def __call__(self, parser, namespace, values, option_string):
         timestr = values
