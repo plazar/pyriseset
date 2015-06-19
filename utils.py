@@ -378,8 +378,8 @@ def mjd_to_datetime(mjd):
     """
     year, month, day = mjd_to_date(mjd)
     obsdate = datetime.datetime(year, month, day)
-    utc = gst_to_utc(mjd_to_gst(mjd), obsdate)
-    return obsdate + datetime.timedelta(hours=utc)
+    #utc = gst_to_utc(mjd_to_gst(mjd), obsdate)
+    return obsdate + datetime.timedelta(days=(mjd%1))
 
 
 def datetime_to_mjd(dt, gregorian=True):
